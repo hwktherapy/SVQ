@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sexual Values Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #1a2744;
+  --navy-deep: #111b33;
+  --plum: #2d1f3d;
+  --rose-dark: #3d1f2d;
+  --gold: #d4aa70;
+  --gold-light: #e8c990;
+  --cream: #fdf8f2;
+  --white: #ffffff;
+  --text-dark: #1a1a1a;
+  --text-mid: #444444;
+  --text-soft: #888888;
+  --border-soft: rgba(0,0,0,0.08);
+}
+
+html { height: 100%; }
+
+body {
+  min-height: 100vh;
+  font-family: 'Outfit', sans-serif;
+  color: #111111;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── ANIMATED GRADIENT BACKGROUND ── */
+.bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--navy-deep);
+  overflow: hidden;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.65;
+  will-change: transform;
+  transform: translateZ(0);
+}
+.bg-orb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  filter: blur(70px);
+  background: inherit;
+}
+
+.orb-1 {
+  width: 700px; height: 700px;
+  background: radial-gradient(circle at center, #6b3fa0 0%, #4a2878 50%, transparent 72%);
+  top: -15%; left: -15%;
+  animation: drift1 28s ease-in-out infinite;
+}
+.orb-2 {
+  width: 580px; height: 580px;
+  background: radial-gradient(circle at center, #8b1a3a 0%, #5c1025 50%, transparent 72%);
+  top: 25%; right: -15%;
+  animation: drift2 34s ease-in-out infinite;
+}
+.orb-3 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle at center, #1a3d7a 0%, #0f2455 50%, transparent 72%);
+  bottom: -10%; left: 25%;
+  animation: drift3 22s ease-in-out infinite;
+}
+.orb-4 {
+  width: 420px; height: 420px;
+  background: radial-gradient(circle at center, #5a1560 0%, #3a0f42 50%, transparent 72%);
+  top: 45%; left: 15%;
+  animation: drift4 40s ease-in-out infinite;
+}
+
+@keyframes drift1 {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  33%  { transform: translate3d(60px, 40px, 0) scale(1.05); }
+  66%  { transform: translate3d(-30px, 70px, 0) scale(0.97); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes drift2 {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  33%  { transform: translate3d(-50px, 30px, 0) scale(1.03); }
+  66%  { transform: translate3d(40px, -60px, 0) scale(0.98); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes drift3 {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(40px, -50px, 0) scale(1.04); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes drift4 {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  25%  { transform: translate3d(-40px, 50px, 0) scale(1.02); }
+  75%  { transform: translate3d(50px, -30px, 0) scale(0.98); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+/* ── LAYOUT ── */
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen { display: none; flex-direction: column; min-height: 100vh; }
+.screen.active { display: flex; }
+
+.page {
+  flex: 1;
+  padding: 2.5rem 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  max-width: 820px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── HEADER ── */
+.page-header { margin-bottom: 2rem; }
+
+.eyebrow {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 0.65rem;
+  font-weight: 500;
+}
+
+.page-title {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.25;
+}
+
+.page-byline {
+  font-size: 13px;
+  color: rgba(255,255,255,0.38);
+  margin-top: 0.3rem;
+  font-style: italic;
+}
+
+/* ── PROGRESS ── */
+.progress-track {
+  height: 2px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 99px;
+  margin-top: 0.75rem;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+  border-radius: 99px;
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── CARDS ── */
+.card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255,255,255,0.6);
+}
+
+.card h2 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.45;
+  margin-bottom: 1rem;
+}
+
+.card p {
+  font-size: 18px;
+  line-height: 1.7;
+  color: #333333;
+  margin-bottom: 0.85rem;
+}
+.card p:last-child { margin-bottom: 0; }
+
+/* ── PRINCIPLES LIST ── */
+.principles-list { list-style: none; margin: 0.75rem 0 1rem; }
+.principles-list li {
+  font-size: 18px;
+  line-height: 1.7;
+  color: #333333;
+  padding: 0.15rem 0 0.15rem 1.2rem;
+  position: relative;
+}
+.principles-list li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0.65em;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.principle-highlight { font-weight: 600; color: var(--navy); }
+
+/* ── BTN STRIP ── */
+.btn-strip {
+  max-width: 820px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.nav-row { display: flex; gap: 0.75rem; }
+
+.btn {
+  padding: 0.95rem 1.25rem;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.22);
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: background 0.18s, border-color 0.18s, transform 0.12s;
+  backdrop-filter: blur(8px);
+}
+.btn:hover {
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.4);
+}
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy-deep);
+  font-weight: 600;
+}
+.btn-primary:hover {
+  background: #b8882a;
+  border-color: #b8882a;
+}
+
+.btn-full { width: 100%; }
+.btn-back { flex: 1; }
+.btn-next { flex: 2; }
+
+/* ── FORM FIELDS ── */
+.field { margin-bottom: 1.25rem; }
+.field:last-child { margin-bottom: 0; }
+.field label {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  color: #111111;
+  margin-bottom: 0.35rem;
+}
+.field .hint {
+  font-size: 14px;
+  color: var(--text-soft);
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+.field input[type="text"],
+.field input[type="email"] {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: 'Outfit', sans-serif;
+  color: #111111;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field input:focus { border-color: var(--gold); }
+.field input:disabled { background: #f6f6f6; color: #aaa; }
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+  cursor: pointer;
+}
+.checkbox-row input[type="checkbox"] {
+  width: 17px; height: 17px;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+.checkbox-row span { font-size: 14px; color: #333333; }
+.optional { font-size: 13px; color: #aaa; font-weight: 400; margin-left: 0.35rem; }
+.required { color: #c0392b; }
+.field-divider { border: none; border-top: 1px solid #f0f0f0; margin: 1.25rem 0; }
+
+/* ── STATEMENT ── */
+.statement {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #111111;
+  margin-bottom: 2rem;
+}
+
+/* ── SLIDER ── */
+.slider-block { margin-bottom: 1.75rem; }
+.slider-block:last-child { margin-bottom: 0; }
+
+.slider-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.slider-divider { border: none; border-top: 1px solid #f0f0f0; margin: 1.75rem 0; }
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 99px;
+  background: #e8e8e8;
+  outline: none;
+  cursor: pointer;
+}
+/* Unset state — gray thumb, no ring */
+input[type="range"].unset::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #cccccc;
+  cursor: pointer;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #cccccc;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+input[type="range"].unset::-moz-range-thumb {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #cccccc;
+  cursor: pointer;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #cccccc;
+}
+/* Set state — gold thumb */
+input[type="range"]:not(.unset)::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px var(--gold), 0 2px 8px rgba(201,169,110,0.4);
+  transition: transform 0.12s, background 0.15s, box-shadow 0.15s;
+}
+input[type="range"]:not(.unset)::-webkit-slider-thumb:hover { transform: scale(1.12); }
+input[type="range"]:not(.unset)::-moz-range-thumb {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px var(--gold);
+}
+
+/* Disabled Next button */
+.btn-next:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.tick-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 7px;
+}
+.tick { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.tick-mark { width: 1px; height: 5px; background: #d0d0d0; }
+.tick-num { font-size: 13px; color: #bbb; font-family: 'Outfit', sans-serif; }
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+.scale-label {
+  font-size: 13px;
+  color: #777777;
+  max-width: 130px;
+  line-height: 1.3;
+  font-family: 'Outfit', sans-serif;
+}
+.scale-label.right { text-align: right; }
+
+/* ── CHOICE BUTTONS ── */
+.choice-row { display: flex; gap: 0.75rem; margin-top: 0.25rem; }
+.choice-btn {
+  flex: 1;
+  padding: 1rem;
+  background: #f7f5f2;
+  color: #111111;
+  border: 2px solid #e8e4de;
+  border-radius: 12px;
+  font-size: 17px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.choice-btn:hover:not(.selected) {
+  border-color: var(--gold);
+  background: #fdf9f3;
+}
+.choice-btn.selected {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+
+.gut-check {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 1.25rem;
+  font-style: italic;
+}
+
+.skip-note {
+  font-size: 14px;
+  color: #aaa;
+  margin-top: 1rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.skip-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.65rem;
+  background: transparent;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+  color: #aaa;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.skip-btn:hover { border-color: #bbb; color: #888; }
+.skip-btn.selected { border-color: var(--navy); color: var(--navy); background: rgba(26,39,68,0.06); }
+
+/* ── CARD TRANSITION ── */
+.card-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  min-height: 120px;
+}
+
+@keyframes exitLeft {
+  from { transform: translateX(0);     opacity: 1; }
+  to   { transform: translateX(-110%); opacity: 0; }
+}
+@keyframes exitRight {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(110%); opacity: 0; }
+}
+@keyframes enterRight {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes enterLeft {
+  from { transform: translateX(-110%); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+.exit-left  { animation: exitLeft  0.28s cubic-bezier(0.4,0,1,1) forwards; }
+.exit-right { animation: exitRight 0.28s cubic-bezier(0.4,0,1,1) forwards; }
+.enter-right { animation: enterRight 0.32s cubic-bezier(0.22,1,0.36,1) both; }
+.enter-left  { animation: enterLeft  0.32s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── RESULTS ── */
+.results-page {
+  flex: 1;
+  padding: 2.5rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  max-width: 820px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.results-header { margin-bottom: 2rem; }
+.results-header h1 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 0.3rem;
+}
+.results-header p { font-size: 13px; color: rgba(255,255,255,0.38); font-style: italic; }
+
+.orientation-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.75rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255,255,255,0.6);
+}
+.orientation-card p { font-size: 16px; line-height: 1.75; color: #333333; margin-bottom: 0.85rem; }
+.orientation-card p:last-child { margin-bottom: 0; }
+
+.orientation-list { list-style: none; margin: 0.5rem 0 1rem; }
+.orientation-list li {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #333333;
+  padding: 0.7rem 0 0.7rem 2.1rem;
+  position: relative;
+  border-bottom: 1px solid #f4f4f4;
+}
+.orientation-list li:last-child { border-bottom: none; padding-bottom: 0; }
+.orientation-list li:first-child { padding-top: 0; }
+.ol-num {
+  position: absolute;
+  left: 0; top: 0.7rem;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.orientation-list li:first-child .ol-num { top: 0; }
+.orientation-list li strong { font-weight: 600; color: #111111; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.38);
+  margin: 2rem 0 0.75rem;
+  display: block;
+}
+
+/* meaning card */
+.top-meaning-card {
+  background: var(--navy-deep);
+  border: 1px solid rgba(201,169,110,0.25);
+  border-radius: 20px;
+  padding: 1.75rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.meaning-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  margin-bottom: 0.4rem;
+}
+.meaning-name {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 1.25rem;
+  line-height: 1.25;
+}
+.meaning-score-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.meaning-pct {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+.meaning-pct-label { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+.meaning-description { font-size: 16px; line-height: 1.8; color: rgba(255,255,255,0.82); }
+
+/* all meanings list */
+.meanings-list-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.75rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255,255,255,0.6);
+}
+.meanings-list-card h3 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111111;
+  margin-bottom: 1rem;
+}
+.meaning-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #f4f4f4;
+}
+.meaning-list-item:last-child { border-bottom: none; padding-bottom: 0; }
+.meaning-list-item:first-child { padding-top: 0; }
+.ml-num {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  min-width: 1.5rem;
+  padding-top: 2px;
+}
+.ml-name { font-size: 16px; font-weight: 600; color: #111111; margin-bottom: 0.25rem; }
+.ml-desc { font-size: 14px; color: #666666; line-height: 1.6; }
+
+/* domain card */
+.domain-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.75rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255,255,255,0.6);
+}
+.domain-eyebrow { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold); margin-bottom: 0.35rem; }
+.domain-name {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111111;
+  margin-bottom: 0.85rem;
+  line-height: 1.3;
+}
+.domain-description {
+  font-size: 16px;
+  line-height: 1.75;
+  color: #555555;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+.subcategory { padding: 1rem 0; border-bottom: 1px solid #f4f4f4; }
+.subcategory:last-child { border-bottom: none; padding-bottom: 0; }
+.subcategory:first-child { padding-top: 0; }
+.sc-name { font-size: 16px; font-weight: 600; color: #111111; margin-bottom: 0.3rem; }
+.sc-description { font-size: 14px; color: #666666; line-height: 1.65; margin-bottom: 0.65rem; }
+
+.gap-tag {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0.32rem 0.85rem;
+  border-radius: 99px;
+  line-height: 1.4;
+}
+.gap-met {
+  background: #eef7f2;
+  color: #2a6b4a;
+  border: 1px solid #c2e8d4;
+}
+.gap-unmet {
+  background: #fef4e8;
+  color: #9a5800;
+  border: 1px solid #f5d9a8;
+}
+
+/* ── INTRO SCREEN SPECIFICS ── */
+#screen-intro .page { padding-bottom: 0; }
+
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <div class="bg-orb orb-4"></div>
+</div>
+
+<div class="app">
+
+<!-- ── INTRO ── -->
+<div class="screen active" id="screen-intro">
+  <div class="page">
+    <div class="page-header">
+      <h1 class="page-title">Sexual Values Quiz</h1>
+      <p class="page-byline">by Hannah Wood-Kraft LMFT-Associate, CST</p>
+    </div>
+
+    <div class="card">
+      <h2>This quiz is about your sexual values — and if that phrase doesn't mean much to you yet, that's exactly why you're here.</h2>
+      <p>A sexual value is a guide for putting meaning to your sexual motivations. It's what you need for sex to feel good, meaningful, and right — the conditions that have to be present. Your values shape why you want sex and what makes it feel right or wrong. They're not fixed. They change over a lifetime, and most people have never been asked to name them.</p>
+      <p>This quiz is built on the work of sex therapist Doug Braun-Harvey, who identified six principles of sexual health:</p>
+      <ul class="principles-list">
+        <li>Consent</li>
+        <li>Non-exploitation</li>
+        <li>Honesty</li>
+        <li><span class="principle-highlight">Shared Values</span></li>
+        <li>Protection and Prevention</li>
+        <li>Pleasure</li>
+      </ul>
+      <p>We're focused on the fourth because knowing what you value sexually changes how you understand yourself and how you connect with others.</p>
+    </div>
+
+    <div class="card">
+      <h2>Why this matters</h2>
+      <p>Your sexual values are already shaping your experience whether you've named them or not. They're behind the things that feel connecting or hollow, satisfying or off. When they go unnamed it's hard to know what you're actually looking for, let alone ask for it.</p>
+      <p>Knowing your values gives you a place to start — with yourself, with a partner, or in the work you're doing with your therapist.</p>
+    </div>
+
+    <div class="card">
+      <h2>How to use this quiz</h2>
+      <p>There are no right answers here. What you're going to get is a starting point, not a verdict, not a diagnosis.</p>
+      <p>Some questions might feel difficult to answer. Take your time and try to be as honest as you can. The quiz works best when you answer based on what's actually true for you, not what you think should be.</p>
+      <p>There are three types of questions. For most statements, you'll use two sliders — one for how important something is to you, and one for how present it feels right now. Some questions ask you to rate how well a statement fits you. A small number ask you to choose between two options.</p>
+    </div>
+
+    <div class="card">
+      <h2>A note on privacy</h2>
+      <p>Your individual answers are private. What gets shared with your clinician are your results — the values that came up strongest and where there may be gaps between what you need and what you're experiencing. Nobody sees your response to any specific question.</p>
+    </div>
+  </div>
+  <div class="btn-strip">
+    <button class="btn btn-primary btn-full" id="begin-btn">Begin</button>
+  </div>
+</div>
+
+<!-- ── EMAIL ── -->
+<div class="screen" id="screen-email">
+  <div class="page">
+    <div class="page-header">
+      <p class="eyebrow">Getting started</p>
+      <h1 class="page-title">Before we begin</h1>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label for="email">Your email <span class="required">*</span></label>
+        <div class="hint">Your results will be sent here and shared with your clinician.</div>
+        <input type="email" id="email" placeholder="you@example.com" />
+      </div>
+      <hr class="field-divider" />
+      <div class="field">
+        <label for="name">Your name <span class="optional">optional</span></label>
+        <div class="hint">Used only to personalize your results.</div>
+        <input type="text" id="name" placeholder="First name or full name" />
+        <label class="checkbox-row">
+          <input type="checkbox" id="anon-check" />
+          <span>Stay anonymous</span>
+        </label>
+      </div>
+      <hr class="field-divider" />
+      <div class="field">
+        <label for="couple-code">Couple code <span class="optional">optional</span></label>
+        <div class="hint">If your clinician gave you a code, enter it here to link your results with your partner's.</div>
+        <input type="text" id="couple-code" placeholder="Enter code" />
+      </div>
+    </div>
+  </div>
+  <div class="btn-strip">
+    <div class="nav-row">
+      <button class="btn btn-back" id="email-back">Back</button>
+      <button class="btn btn-primary btn-next" id="email-next">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── QUESTION ── -->
+<div class="screen" id="screen-question">
+  <div class="page">
+    <div class="page-header">
+      <p class="eyebrow" id="q-eyebrow">Question 1 of 84</p>
+      <div class="progress-track">
+        <div class="progress-fill" id="q-progress" style="width:1%"></div>
+      </div>
+    </div>
+    <div class="card-wrapper">
+      <div class="card" id="q-card"></div>
+    </div>
+  </div>
+  <div class="btn-strip">
+    <div class="nav-row">
+      <button class="btn btn-back" id="q-back">Back</button>
+      <button class="btn btn-primary btn-next" id="q-next">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RESULTS ── -->
+<div class="screen" id="screen-results">
+  <div class="results-page" id="results-content"></div>
+</div>
+
+</div><!-- .app -->
+
+<script>
+const DUAL = 'dual', SCENARIO = 'scenario', PAIRING = 'pairing';
+
+const M = {
+  SAFETY:'Safety', LOVE:'Love and Intimacy', PLEASURE:'Physical Pleasure',
+  STRESS:'Stress Relief', FUN:'Fun and Playfulness', SPIRITUAL:'Spiritual or Transcendent',
+  EXPRESSION:'Self-Expression', REPRODUCTION:'Reproduction'
+};
+const SC = {
+  EI:'Emotional Intimacy', PA:'Presence and Attunement', FS:'Feeling Safe',
+  DE:'Desirability', SP:'Spontaneity', DL:'Deliberateness', EN:'Exploration and Novelty', FR:'Frequency',
+  HO:'Honesty', CO:'Communication', VU:'Vulnerability and Openness', EX:'Exclusivity', CM:'Commitment',
+  AU:'Autonomy', SK:'Self-Knowledge', BA:'Body Acceptance', SS:'Sexual Self-Expression', PR:'Privacy'
+};
+const DOM = {
+  CONNECTION:'Connection', DESIRE:'Desire and Expression',
+  ETHICS:'Ethics and Communication', IDENTITY:'Identity and Embodiment'
+};
+const SC_DOMAIN = {
+  [SC.EI]:DOM.CONNECTION,[SC.PA]:DOM.CONNECTION,[SC.FS]:DOM.CONNECTION,
+  [SC.DE]:DOM.DESIRE,[SC.SP]:DOM.DESIRE,[SC.DL]:DOM.DESIRE,[SC.EN]:DOM.DESIRE,[SC.FR]:DOM.DESIRE,
+  [SC.HO]:DOM.ETHICS,[SC.CO]:DOM.ETHICS,[SC.VU]:DOM.ETHICS,[SC.EX]:DOM.ETHICS,[SC.CM]:DOM.ETHICS,
+  [SC.AU]:DOM.IDENTITY,[SC.SK]:DOM.IDENTITY,[SC.BA]:DOM.IDENTITY,[SC.SS]:DOM.IDENTITY,[SC.PR]:DOM.IDENTITY
+};
+
+const dualQuestions = [
+  {id:'M1.1',type:DUAL,text:'Sex feels most meaningful to me when it gives me a sense of safety and security.',meaning:M.SAFETY},
+  {id:'M1.2',type:DUAL,text:'A core reason I have sex is to feel safe and grounded.',meaning:M.SAFETY},
+  {id:'M2.1',type:DUAL,text:'For me, sex is fundamentally about deepening love and intimacy.',meaning:M.LOVE},
+  {id:'M2.2',type:DUAL,text:'Sex matters most to me as a way to grow closer to another person.',meaning:M.LOVE},
+  {id:'M3.1',type:DUAL,text:'Physical pleasure and sensation are central to sex being worthwhile for me.',meaning:M.PLEASURE},
+  {id:'M3.2',type:DUAL,text:'I prioritize my own physical enjoyment when I am having sex.',meaning:M.PLEASURE},
+  {id:'M4.1',type:DUAL,text:'A core reason I have sex is to release stress and tension.',meaning:M.STRESS},
+  {id:'M4.2',type:DUAL,text:'Sex is one of the main ways I unwind and decompress.',meaning:M.STRESS},
+  {id:'M5.1',type:DUAL,text:'For me, sex is fundamentally about fun and playfulness.',meaning:M.FUN},
+  {id:'M5.2',type:DUAL,text:'Sex is best for me when it feels light and playful.',meaning:M.FUN},
+  {id:'M6.1',type:DUAL,text:'Sex feels most meaningful when it feels like it connects me to something larger than the physical experience.',meaning:M.SPIRITUAL},
+  {id:'M6.2',type:DUAL,text:'At its best, sex is a spiritual or transcendent experience for me.',meaning:M.SPIRITUAL},
+  {id:'M7.1',type:DUAL,text:'Sex is a way for me to express who I truly am.',meaning:M.EXPRESSION},
+  {id:'M7.2',type:DUAL,text:'I feel most fulfilled when sex lets me express my identity and authentic self.',meaning:M.EXPRESSION},
+  {id:'M8.1',type:DUAL,text:'Sex is meaningful to me as a way to create or grow a family.',meaning:M.REPRODUCTION},
+  {id:'M8.2',type:DUAL,text:'A core part of what sex means to me is its connection to having children.',meaning:M.REPRODUCTION},
+  {id:'EI.1',type:DUAL,text:'Sex feels most meaningful when there is emotional intimacy and closeness with a sexual partner.',subcat:SC.EI},
+  {id:'EI.2',type:DUAL,text:'I need emotional intimacy with a sexual partner for sex to feel complete.',subcat:SC.EI},
+  {id:'PA.1',type:DUAL,text:'I need whoever I\'m with to be mentally and emotionally present during sex, not just physically there.',subcat:SC.PA},
+  {id:'PA.2',type:DUAL,text:'I need to feel focus and attention from whoever I\'m with during sex.',subcat:SC.PA},
+  {id:'FS.1',type:DUAL,text:'I need to feel emotionally safe with a sexual partner before I can fully open up sexually.',subcat:SC.FS},
+  {id:'FS.2',type:DUAL,text:'Knowing where I stand in a sexual relationship is a condition for sex feeling right to me.',subcat:SC.FS},
+  {id:'FS.3',type:DUAL,text:'I feel more comfortable and able to relax sexually when things feel predictable and safe than when there are new or unfamiliar things.',subcat:SC.FS},
+  {id:'FS.4',type:DUAL,text:'I cannot enjoy sex when I know the person I\'m with finds other people attractive.',subcat:SC.FS,reverseScore:true},
+  {id:'FS.5',type:DUAL,text:'Knowing my sexual partner is attracted to others doesn\'t threaten my ability to feel sexually present with them.',subcat:SC.FS},
+  {id:'D1.1',type:DUAL,text:'Feeling wanted and desired matters to how I experience sex.',subcat:SC.DE},
+  {id:'D1.2',type:DUAL,text:'Sex feels hollow or unsatisfying when I do not feel wanted.',subcat:SC.DE},
+  {id:'S1.1',type:DUAL,text:'Sex feels more satisfying when it happens spontaneously and in the moment.',subcat:SC.SP},
+  {id:'S1.2',type:DUAL,text:'Unplanned sex tends to feel more alive and exciting to me than sex I know is coming.',subcat:SC.SP},
+  {id:'DL.1',type:DUAL,text:'Sex feels more satisfying when it is planned and intentional.',subcat:SC.DL},
+  {id:'DL.2',type:DUAL,text:'Knowing sex is planned gives me time to anticipate and look forward to it.',subcat:SC.DL},
+  {id:'DL.3',type:DUAL,text:'Planning sex feels like an act of care and intention to me.',subcat:SC.DL},
+  {id:'EN.1',type:DUAL,text:'Exploring new things sexually is something I actively seek out to keep my sex life feeling rich.',subcat:SC.EN},
+  {id:'EN.2',type:DUAL,text:'Without trying new things sexually, I feel like sex becomes routine or boring.',subcat:SC.EN},
+  {id:'F1.1',type:DUAL,text:'How often I have sex matters to my overall sexual satisfaction.',subcat:SC.FR},
+  {id:'F1.2',type:DUAL,text:'When sex or masturbation is infrequent, I feel disconnected from my partner or from my own sexuality.',subcat:SC.FR},
+  {id:'H.1',type:DUAL,text:'Being fully honest about my desires and experiences is central to sex feeling right to me.',subcat:SC.HO},
+  {id:'H.2',type:DUAL,text:'I would rather have an uncomfortable honest conversation about sex than avoid it to keep the peace.',subcat:SC.HO},
+  {id:'C.1',type:DUAL,text:'Talking openly about what I want and need is an important part of my sexual satisfaction.',subcat:SC.CO},
+  {id:'C.2',type:DUAL,text:'Sex improves for me when I can discuss it directly with a sexual partner, before, during, or after.',subcat:SC.CO},
+  {id:'V.1',type:DUAL,text:'Being willing to be emotionally exposed and seen during sex matters to me.',subcat:SC.VU},
+  {id:'V.2',type:DUAL,text:'I value being able to show the parts of my sexuality I feel unsure about to someone I\'m with sexually.',subcat:SC.VU},
+  {id:'EX.1',type:DUAL,text:'Sexual exclusivity is an important part of how I want my relationships to work.',subcat:SC.EX},
+  {id:'EX.2',type:DUAL,text:'I want sexual exclusivity to be a clear and agreed-upon part of any relationship I\'m in.',subcat:SC.EX},
+  {id:'CM.1',type:DUAL,text:'A sense of lasting commitment makes sex more meaningful to me.',subcat:SC.CM},
+  {id:'CM.2',type:DUAL,text:'I find it hard to fully invest in sex when there\'s no sense of dedication, either to a partner or to myself.',subcat:SC.CM},
+  {id:'A.1',type:DUAL,text:'Having ownership over my own sexual choices is important to me.',subcat:SC.AU},
+  {id:'A.2',type:DUAL,text:'I need to feel that my sexuality belongs to me and is not shaped by others\' expectations.',subcat:SC.AU},
+  {id:'SK.1',type:DUAL,text:'I have a clear understanding of what turns me on and what I want sexually.',subcat:SC.SK},
+  {id:'SK.2',type:DUAL,text:'I pay attention to and stay curious about how my desires change over time.',subcat:SC.SK},
+  {id:'BA.1',type:DUAL,text:'Feeling comfortable in my body is important to how I experience sex.',subcat:SC.BA},
+  {id:'BA.2',type:DUAL,text:'I can stay present during sex without getting distracted by self-consciousness about my body.',subcat:SC.BA},
+  {id:'SS.1',type:DUAL,text:'Being able to express my authentic sexual self is important to me.',subcat:SC.SS},
+  {id:'SS.2',type:DUAL,text:'I feel safe in my identity as a sexual being.',subcat:SC.SS},
+  {id:'PR.1',type:DUAL,text:'Having privacy around my sexuality is important to me.',subcat:SC.PR},
+  {id:'PR.2',type:DUAL,text:'I prefer to keep what happens sexually between myself and whoever is involved.',subcat:SC.PR},
+];
+
+const scenarioQuestions = [
+  {id:'PA.3',type:SCENARIO,text:'I feel more satisfied when whoever I\'m with is fully focused on me and our connection than when I receive emotional relief or decompression from sex.',subcat:SC.PA,meaningFed:M.STRESS},
+  {id:'D1.3',type:SCENARIO,text:'Feeling wanted matters more to me during sex than whether sex helps me release tension.',subcat:SC.DE,meaningFed:M.STRESS},
+  {id:'S1.3',type:SCENARIO,text:'I feel disappointed or disconnected when sex has to be planned or scheduled.',subcat:SC.SP},
+  {id:'DL.4',type:SCENARIO,text:'I have a harder time enjoying sex when it happens without time to mentally and emotionally prepare.',subcat:SC.DL},
+  {id:'EN.3',type:SCENARIO,text:'Sex that feels spiritually meaningful and connected matters more to me than sex that is exploratory or includes new things.',subcat:SC.EN,meaningFed:M.SPIRITUAL,reverseScore:true},
+  {id:'F1.3',type:SCENARIO,text:'Having sex regularly matters more to me than whether each encounter feels like an authentic expression of who I am.',subcat:SC.FR,meaningFed:M.EXPRESSION},
+  {id:'H.3',type:SCENARIO,text:'Sex built on complete honesty feels more right to me than sex that feels playful and exciting because some things are left unspoken.',subcat:SC.HO,meaningFed:M.FUN},
+  {id:'C.3',type:SCENARIO,text:'Sex feels more complete to me when it involves open communication than when it feels like a personal expression of who I am.',subcat:SC.CO,meaningFed:M.EXPRESSION},
+  {id:'V.3',type:SCENARIO,text:'I feel more fulfilled when I let myself be fully seen during sex than when I stay protected and in control.',subcat:SC.VU},
+  {id:'EX.3',type:SCENARIO,text:'I can only really let go and have fun sexually when a relationship is exclusive.',subcat:SC.EX,meaningFed:M.FUN},
+  {id:'EX.4',type:SCENARIO,text:'I have more fun sexually when exclusivity isn\'t a requirement in my relationships.',subcat:SC.EX,meaningFed:M.FUN,reverseScore:true},
+  {id:'CM.3',type:SCENARIO,text:'I am okay with less physically satisfying sex as long as it is with a committed partner.',subcat:SC.CM,meaningFed:M.PLEASURE},
+  {id:'A.3',type:SCENARIO,text:'I feel more alive during sex that reflects my true desires than during sex that mainly keeps me feeling safe.',subcat:SC.AU,meaningFed:M.SAFETY},
+  {id:'SK.3',type:SCENARIO,text:'I would rather have sex that deeply reflects my desires than sex that is a reliable way to decompress.',subcat:SC.SK,meaningFed:M.STRESS},
+  {id:'BA.3',type:SCENARIO,text:'It\'s more important to me that I feel comfortable in my body during sex than that sex creates emotional connection.',subcat:SC.BA,meaningFed:M.LOVE},
+  {id:'SS.3',type:SCENARIO,text:'I would rather express my authentic sexual self than hold back to keep sex feeling safe and comfortable.',subcat:SC.SS,meaningFed:M.SAFETY},
+  {id:'PR.3',type:SCENARIO,text:'I would rather keep my sexuality private than use it to express who I am to the world.',subcat:SC.PR,meaningFed:M.EXPRESSION},
+];
+
+const pairingQuestions = [
+  {id:'P1',type:PAIRING,text:'I would rather have sex that deepens emotional intimacy than sex that is intensely physically pleasurable.',winnerAgree:M.LOVE,winnerDisagree:M.PLEASURE},
+  {id:'P2',type:PAIRING,text:'When I\'m stressed, I would rather have sex that connects me to a partner than sex that just helps me get relief.',winnerAgree:M.LOVE,winnerDisagree:M.STRESS},
+  {id:'P3',type:PAIRING,text:'I would rather have sex that is light and playful than sex that deepens love and connection.',winnerAgree:M.FUN,winnerDisagree:M.LOVE},
+  {id:'P4',type:PAIRING,text:'I would rather have sex that feels really good in my body than sex that mainly leaves me feeling relieved afterward.',winnerAgree:M.PLEASURE,winnerDisagree:M.STRESS},
+  {id:'P5',type:PAIRING,text:'I would rather have sex that feels really good in my body than sex that mainly keeps me feeling safe and secure.',winnerAgree:M.PLEASURE,winnerDisagree:M.SAFETY},
+  {id:'P6',type:PAIRING,text:'I would rather have sex that helps me release tension than sex that is playful and fun.',winnerAgree:M.STRESS,winnerDisagree:M.FUN},
+  {id:'P7',type:PAIRING,text:'I would rather have sex that lets me express who I am than sex that deepens closeness with someone else.',winnerAgree:M.EXPRESSION,winnerDisagree:M.LOVE},
+  {id:'P8',type:PAIRING,text:'I would rather have sex that lets me fully express myself than sex that keeps me feeling safe.',winnerAgree:M.EXPRESSION,winnerDisagree:M.SAFETY},
+  {id:'P9',type:PAIRING,text:'I would rather have sex that feels safe and secure than sex that is spontaneous and playful.',winnerAgree:M.SAFETY,winnerDisagree:M.FUN},
+  {id:'P10',type:PAIRING,text:'I would rather have sex that feels transcendent and deeply meaningful than sex that helps me release stress.',winnerAgree:M.SPIRITUAL,winnerDisagree:M.STRESS},
+  {id:'P11',type:PAIRING,text:'I would rather have sex that feels spiritually meaningful than sex that is physically pleasurable.',winnerAgree:M.SPIRITUAL,winnerDisagree:M.PLEASURE},
+  {id:'P12',type:PAIRING,text:'When trying to conceive, I would rather sex still feel physically pleasurable than treat it as purely functional, even if that means being less strict about timing.',winnerAgree:M.PLEASURE,winnerDisagree:M.REPRODUCTION,skippable:true},
+];
+
+function shuffle(arr) {
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function shuffleNoAdjacent(arr,keyFn) {
+  let attempts=0;
+  while(attempts<200){
+    const s=shuffle(arr);let ok=true;
+    for(let i=1;i<s.length;i++){if(keyFn(s[i])&&keyFn(s[i])===keyFn(s[i-1])){ok=false;break;}}
+    if(ok)return s;attempts++;
+  }
+  return shuffle(arr);
+}
+
+const QUESTIONS=[
+  ...shuffleNoAdjacent(dualQuestions,q=>q.meaning||q.subcat),
+  ...shuffleNoAdjacent(scenarioQuestions,q=>q.subcat),
+  ...shuffle(pairingQuestions)
+];
+const TOTAL=QUESTIONS.length;
+let currentQ=0;
+const responses={};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function sliderHTML(id, label, left, right, val, isSet) {
+  const unsetClass = isSet ? '' : ' unset';
+  return `<div class="slider-block">
+    <div class="slider-label">${label}</div>
+    <div class="scale-labels"><span class="scale-label">${left}</span><span class="scale-label right">${right}</span></div>
+    <input type="range" id="${id}" class="svq-slider${unsetClass}" min="1" max="5" step="1" value="${val}" />
+    <div class="tick-row">${[1,2,3,4,5].map(n=>`<div class="tick"><div class="tick-mark"></div><div class="tick-num">${n}</div></div>`).join('')}</div>
+  </div>`;
+}
+
+// Track which sliders on the current card have been interacted with
+let cardInteracted = {};
+
+function updateNextButton() {
+  const btn = document.getElementById('q-next');
+  const q = QUESTIONS[currentQ];
+  let ready = false;
+  if (q.type === DUAL) {
+    ready = !!cardInteracted['imp'] && !!cardInteracted['rea'];
+  } else if (q.type === SCENARIO) {
+    ready = !!cardInteracted['agr'];
+  } else if (q.type === PAIRING) {
+    ready = !!cardInteracted['choice'];
+  }
+  btn.disabled = !ready;
+}
+
+function attachSliderListeners(q) {
+  if (q.type === DUAL) {
+    ['imp', 'rea'].forEach(key => {
+      const el = document.getElementById(key + '-slider');
+      if (!el) return;
+      const activate = () => {
+        el.classList.remove('unset');
+        cardInteracted[key] = true;
+        updateNextButton();
+      };
+      el.addEventListener('mousedown', activate, { once: true });
+      el.addEventListener('touchstart', activate, { once: true });
+      el.addEventListener('click', activate, { once: true });
+    });
+  } else if (q.type === SCENARIO) {
+    const el = document.getElementById('agr-slider');
+    if (!el) return;
+    const activate = () => {
+      el.classList.remove('unset');
+      cardInteracted['agr'] = true;
+      updateNextButton();
+    };
+    el.addEventListener('mousedown', activate, { once: true });
+    el.addEventListener('touchstart', activate, { once: true });
+    el.addEventListener('click', activate, { once: true });
+  }
+}
+
+function renderQuestion(index, direction) {
+  const q = QUESTIONS[index];
+  const saved = responses[q.id];
+
+  // If returning to an answered question, all interactions already done
+  cardInteracted = {};
+  if (saved) {
+    if (q.type === DUAL) { cardInteracted['imp'] = true; cardInteracted['rea'] = true; }
+    else if (q.type === SCENARIO) { cardInteracted['agr'] = true; }
+    else if (q.type === PAIRING) { cardInteracted['choice'] = true; }
+  }
+
+  document.getElementById('q-eyebrow').textContent = `Question ${index + 1} of ${TOTAL}`;
+  document.getElementById('q-progress').style.width = `${Math.round(((index + 1) / TOTAL) * 100)}%`;
+  document.getElementById('q-next').textContent = index < TOTAL - 1 ? 'Next' : 'See results';
+
+  const card = document.getElementById('q-card');
+
+  function doRender() {
+    if (q.type === DUAL) {
+      const imp = saved ? saved.importance : 3;
+      const rea = saved ? saved.reality : 3;
+      const impSet = !!saved;
+      const reaSet = !!saved;
+      card.innerHTML = `
+        <p class="statement">${q.text}</p>
+        ${sliderHTML('imp-slider', 'How important is this to me?', 'Not important to me', 'Essential to me', imp, impSet)}
+        <hr class="slider-divider" />
+        ${sliderHTML('rea-slider', 'How present is this for me right now?', 'Not present for me right now', 'Very present for me right now', rea, reaSet)}
+      `;
+    } else if (q.type === SCENARIO) {
+      const agr = saved ? saved.agreement : 3;
+      const agrSet = !!saved;
+      card.innerHTML = `
+        <p class="statement">${q.text}</p>
+        ${sliderHTML('agr-slider', 'How well does this fit you?', "Doesn't fit me", 'Fits me well', agr, agrSet)}
+      `;
+    } else if (q.type === PAIRING) {
+      const choice = saved ? saved.choice : null;
+      card.innerHTML = `
+        <p class="statement">${q.text}</p>
+        <p class="gut-check">Go with your gut — even if it's close.</p>
+        <div class="choice-row">
+          <button class="choice-btn${choice === 'agree' ? ' selected' : ''}" id="btn-agree">Agree</button>
+          <button class="choice-btn${choice === 'disagree' ? ' selected' : ''}" id="btn-disagree">Disagree</button>
+        </div>
+        ${q.skippable ? `<p class="skip-note">This question is about conception. Skip it if it doesn't apply to you.</p>
+          <button class="skip-btn${choice === 'skip' ? ' selected' : ''}" id="btn-skip">Skip this question</button>` : ''}
+      `;
+      document.getElementById('btn-agree').addEventListener('click', () => selectPairing('agree'));
+      document.getElementById('btn-disagree').addEventListener('click', () => selectPairing('disagree'));
+      if (q.skippable) document.getElementById('btn-skip').addEventListener('click', () => selectPairing('skip'));
+    }
+    attachSliderListeners(q);
+    updateNextButton();
+  }
+
+  if (direction) {
+    const exitCls = direction === 'forward' ? 'exit-left' : 'exit-right';
+    const enterCls = direction === 'forward' ? 'enter-right' : 'enter-left';
+    card.classList.remove('exit-left', 'exit-right', 'enter-right', 'enter-left');
+    card.classList.add(exitCls);
+    setTimeout(() => {
+      card.classList.remove('exit-left', 'exit-right', 'enter-right', 'enter-left');
+      doRender();
+      void card.offsetWidth;
+      card.classList.add(enterCls);
+    }, 270);
+  } else {
+    doRender();
+  }
+}
+
+function selectPairing(choice) {
+  responses[QUESTIONS[currentQ].id]={choice};
+  cardInteracted['choice'] = true;
+  document.querySelectorAll('.choice-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.skip-btn').forEach(b=>b.classList.remove('selected'));
+  if(choice==='agree') document.getElementById('btn-agree').classList.add('selected');
+  else if(choice==='disagree') document.getElementById('btn-disagree').classList.add('selected');
+  else if(choice==='skip'){const sb=document.getElementById('btn-skip');if(sb)sb.classList.add('selected');}
+  updateNextButton();
+}
+
+function saveCurrentResponse() {
+  const q=QUESTIONS[currentQ];
+  if(q.type===DUAL){
+    const i=document.getElementById('imp-slider');
+    const r=document.getElementById('rea-slider');
+    if(i&&r) responses[q.id]={importance:parseInt(i.value),reality:parseInt(r.value)};
+  } else if(q.type===SCENARIO){
+    const a=document.getElementById('agr-slider');
+    if(a) responses[q.id]={agreement:parseInt(a.value)};
+  }
+}
+
+function rev(v){return 6-v;}
+
+function computeResults(){
+  const mScores={};
+  Object.values(M).forEach(m=>{
+    const items=dualQuestions.filter(q=>q.meaning===m);
+    const imps=items.map(q=>{const r=responses[q.id];return r?r.importance:3;});
+    const reas=items.map(q=>{const r=responses[q.id];return r?r.reality:3;});
+    const impScore=Math.round((imps.reduce((a,b)=>a+b,0)/(items.length*5))*100);
+    const gapScore=parseFloat((imps.map((v,i)=>v-reas[i]).reduce((a,b)=>a+b,0)/imps.length).toFixed(2));
+    mScores[m]={impScore,gapScore};
+  });
+
+  const pWins={},pApp={};
+  Object.values(M).forEach(m=>{pWins[m]=0;pApp[m]=0;});
+  pairingQuestions.forEach(q=>{
+    const r=responses[q.id];
+    if(!r||r.choice==='skip') return;
+    pApp[q.winnerAgree]++;pApp[q.winnerDisagree]++;
+    if(r.choice==='agree') pWins[q.winnerAgree]++;
+    else pWins[q.winnerDisagree]++;
+  });
+  const pRates={};
+  Object.values(M).forEach(m=>{pRates[m]=pApp[m]>0?pWins[m]/pApp[m]:0;});
+
+  const rankedMeanings=Object.entries(mScores).sort(([,a],[,b])=>{
+    const d=b.impScore-a.impScore;
+    if(Math.abs(d)>5) return d;
+    return pRates[b[0]]-pRates[a[0]];
+  }).map(([m,s])=>({meaning:m,...s}));
+
+  const scScores={};
+  Object.values(SC).forEach(sc=>{
+    const directs=dualQuestions.filter(q=>q.subcat===sc);
+    const scenarios=scenarioQuestions.filter(q=>q.subcat===sc);
+    const imps=directs.map(q=>{const r=responses[q.id];let v=r?r.importance:3;if(q.reverseScore)v=rev(v);return v;});
+    const reas=directs.map(q=>{const r=responses[q.id];let v=r?r.reality:3;if(q.reverseScore)v=rev(v);return v;});
+    const impScore=imps.length?imps.reduce((a,b)=>a+b,0)/imps.length:0;
+    const gapScore=imps.length?(imps.map((v,i)=>v-reas[i]).reduce((a,b)=>a+b,0)/imps.length):0;
+    let sSum=0,sCnt=0;
+    scenarios.forEach(q=>{const r=responses[q.id];let v=r?r.agreement:3;if(q.reverseScore)v=rev(v);sSum+=v;sCnt++;});
+    const rankingScore=sCnt>0?(impScore*0.7)+((sSum/sCnt)*0.3):impScore;
+    scScores[sc]={impScore,gapScore:parseFloat(gapScore.toFixed(3)),rankingScore,domain:SC_DOMAIN[sc]};
+  });
+
+  const domScores={};
+  Object.values(DOM).forEach(dom=>{
+    const scs=Object.entries(SC_DOMAIN).filter(([,d])=>d===dom).map(([s])=>s);
+    domScores[dom]=scs.map(s=>scScores[s].impScore).reduce((a,b)=>a+b,0)/scs.length;
+  });
+
+  const rankedDomains=Object.entries(domScores).sort(([,a],[,b])=>b-a).map(([d,s])=>({domain:d,score:s}));
+
+  const topSubcats={};
+  Object.values(DOM).forEach(dom=>{
+    topSubcats[dom]=Object.entries(scScores).filter(([,s])=>s.domain===dom)
+      .sort(([,a],[,b])=>b.rankingScore-a.rankingScore).slice(0,2)
+      .map(([sc,s])=>({subcat:sc,...s}));
+  });
+
+  return{rankedMeanings,rankedDomains,topSubcats,scScores};
+}
+
+const MEANING_FULL={
+  [M.SAFETY]:`For people who score highest here, sex is most meaningful when it happens within a felt sense of security. The body and mind have their own way of knowing whether conditions are safe enough to open up. For some people that internal read is the thing everything else depends on. When safety is present, desire has room to move. Knowing where things stand, feeling held rather than evaluated, trusting that the space is steady. These are the conditions that make sex feel worth having. That need for security shows up across your results. It shapes what you look for in connection, how desire gets activated, what feels honest and right, and how at home you feel in your own body during sex.`,
+  [M.LOVE]:`For people who score highest here, sex is most meaningful as an expression of closeness and connection. It is one of the most widely shared sexual values across research and across cultures, and for good reason. Sex that deepens a bond, that makes two people feel more known to each other, that carries the weight of genuine feeling. That is what makes it worth having. For these people, the quality of the relationship is inseparable from the quality of the sexual experience.`,
+  [M.PLEASURE]:`For people who score highest here, sex is most meaningful as a physical experience. Sensation, pleasure, and the body's capacity for enjoyment are not incidental to sex. They are the point. Research consistently shows physical pleasure as one of the most highly endorsed reasons people have sex, and for these people it is the primary one. What the body feels, how fully it is engaged, how much genuine physical satisfaction is present. These are the measures by which sex feels worthwhile.`,
+  [M.STRESS]:`For people who score highest here, sex is most meaningful as a way to release tension and return to equilibrium. The body knows how to use sexual experience as a regulatory tool, and for these people that function is central. Sex that leaves them feeling calmer, lighter, more settled in themselves. That is what makes it worth having. This meaning reflects something real about how the nervous system works and how some people are wired to find relief. It is a legitimate and well-documented reason to want sex, and for these people it may be the most honest one.`,
+  [M.FUN]:`For people who score highest here, sex is most meaningful when it is light, playful, and genuinely enjoyable. Fun reflects something important about how play functions in human connection and in the body. Play is one of the ways people stay present, stay curious, and stay close to each other. For these people, sex that feels easy and alive, that has room for laughter and spontaneity, carries its own kind of depth. That orientation toward lightness shapes how they engage, what they look for, and what makes sex feel like something they actually want.`,
+  [M.SPIRITUAL]:`For people who score highest here, sex is most meaningful when it connects them to something larger than the physical experience. This is one of the oldest and most persistent ways humans have understood sexuality, present across cultures and traditions and documented in contemporary research as well. Sex that feels sacred, that produces a sense of union or expansion, that reaches beyond the ordinary. For these people that quality of transcendence is what gives sex its deepest meaning. It shapes what they bring to sexual experience and what they are looking for when they show up for it.`,
+  [M.EXPRESSION]:`For people who score highest here, sex is most meaningful as an act of self-expression. It is one of the ways they know and communicate who they are. Sex that allows them to show up fully, to bring their actual desires and identity into the experience, carries a distinct kind of meaning. Research points to expression as a genuine and separate motivation for sex, and for these people it may be the most clarifying one. When sex reflects who they are, it feels right and worth having.`,
+  [M.REPRODUCTION]:`For people who score highest here, sex is most meaningful in its connection to creating life and growing a family. This is one of the most fundamental human motivations, present across every culture and documented consistently in research. For these people the reproductive dimension of sex carries genuine emotional and psychological weight. It gives sex a sense of purpose that goes beyond the moment and connects it to something larger in their lives.`,
+};
+const MEANING_SHORT={
+  [M.SAFETY]:`Sex feels most meaningful within a felt sense of security. For these people, safety is one of the conditions that makes desire possible.`,
+  [M.LOVE]:`Sex is most meaningful as an expression of closeness and connection. The quality of the relationship and the quality of the sexual experience are inseparable.`,
+  [M.PLEASURE]:`Sex is most meaningful as a physical experience. Sensation and the body's capacity for enjoyment are the primary measure of whether sex feels worthwhile.`,
+  [M.STRESS]:`Sex is most meaningful as a way to release tension and return to a sense of calm. For these people, the relief sex provides is a central part of its value.`,
+  [M.FUN]:`Sex is most meaningful when it is light, playful, and genuinely enjoyable. For these people, fun and ease are central to what makes sex feel alive.`,
+  [M.SPIRITUAL]:`Sex is most meaningful when it connects to something larger than the physical experience. For these people, transcendence and a sense of the sacred are central to what makes sex matter.`,
+  [M.EXPRESSION]:`Sex is most meaningful as an act of self-expression. For these people, sex is one of the ways they know and communicate who they are.`,
+  [M.REPRODUCTION]:`Sex is most meaningful in its connection to creating life and growing a family. For these people, the reproductive dimension of sex carries genuine emotional and psychological weight.`,
+};
+const DOMAIN_DESC={
+  [DOM.CONNECTION]:`Connection measures how much emotional closeness, presence, and safety matter as conditions for sex to feel right. For people who score high here, the relational environment is not separate from the sexual experience. It is part of it. Who they are with, how safe they feel, how present and attuned that person is. These things shape whether sex feels meaningful or hollow, connected or distant.`,
+  [DOM.DESIRE]:`Desire and Expression measures what activates sexual desire and how someone prefers to experience it. This includes whether desire is sparked by feeling wanted, by novelty and exploration, by the rhythm and frequency of sexual connection, or by whether sex happens spontaneously or with intention. People who score high here have a clear sense of the conditions that bring desire to life for them.`,
+  [DOM.ETHICS]:`Ethics and Communication measures the values someone holds around honesty, openness, and mutual respect in sexual relationships. For people who score high here, how sex is negotiated, discussed, and agreed upon matters as much as the experience itself. The relational agreements around sex, the willingness to be vulnerable, and the expectation of honesty are not separate from sexual satisfaction. They are part of what makes it possible.`,
+  [DOM.IDENTITY]:`Identity and Embodiment measures how someone relates to their own sexuality and body in sexual contexts. This includes self-knowledge, comfort in one's body, the freedom to express an authentic sexual self, a sense of ownership over sexual choices, and privacy around sexuality. For people who score high here, the relationship with oneself is the foundation everything else is built on.`,
+};
+const SUBCAT_DESC={
+  [SC.EI]:`Emotional intimacy captures the need for closeness and emotional connection with a partner as a condition for sex to feel meaningful. For people who score high here, that bond is a central part of what makes sex feel significant.`,
+  [SC.PA]:`Presence and Attunement captures the need for a partner's genuine focus and emotional availability during sex. For people who score high here, feeling truly met and attended to is part of what makes sex feel real.`,
+  [SC.FS]:`Feeling Safe captures the need for predictability, emotional security, and knowing where things stand as conditions for sex to feel right. For people who score high here, that sense of groundedness is what allows them to fully show up.`,
+  [SC.DE]:`Desirability captures the need to feel wanted and sought after as a condition for sex to feel alive and meaningful. For people who score high here, that sense of being desired is part of what makes sex worth having.`,
+  [SC.SP]:`Spontaneity captures the need for unplanned, in-the-moment sex as a condition for desire to feel genuine. For people who score high here, that quality of surprise is part of what gives sex its energy.`,
+  [SC.DL]:`Deliberateness captures the need for planned, intentional sex as a condition for desire to feel meaningful. For people who score high here, anticipation and preparation are part of what makes sex worth having.`,
+  [SC.EN]:`Exploration and Novelty captures the need for new experiences and variety as a condition for sex to feel rich and engaging. For people who score high here, curiosity and discovery are part of what keeps sex meaningful.`,
+  [SC.FR]:`Frequency captures the need for regular sexual connection as a condition for feeling satisfied and in touch with one's own sexuality. For people who score high here, how often sex happens is part of what makes it feel sustaining.`,
+  [SC.HO]:`Honesty captures the need for full transparency about desires and experiences as a condition for sex to feel right. For people who score high here, that truthfulness is what makes sexual connection trustworthy and real.`,
+  [SC.CO]:`Communication captures the need to talk openly about sex as a condition for sexual satisfaction. For people who score high here, direct conversation before, during, or after sex is part of what makes the experience feel complete.`,
+  [SC.VU]:`Vulnerability and Openness captures the need to be emotionally exposed and fully seen during sex as a condition for it to feel meaningful. For people who score high here, that willingness to be known is part of what makes sex feel real and worthwhile.`,
+  [SC.EX]:`Exclusivity captures the need for sexual exclusivity as a clear and agreed-upon condition for sex to feel right. For people who score high here, that boundary is part of what makes the sexual relationship feel safe and trustworthy.`,
+  [SC.CM]:`Commitment captures the need for a sense of lasting dedication as a condition for sex to feel meaningful. For people who score high here, that sense of investment is part of what gives sex its weight.`,
+  [SC.AU]:`Autonomy captures the need to feel full ownership over one's own sexual choices as a condition for sex to feel right. For people who score high here, that sense of agency is what makes sexual experience feel genuine and self-directed.`,
+  [SC.SK]:`Self-Knowledge captures the need to understand one's own desires and stay curious about how they change as a condition for sex to feel authentic. For people who score high here, that self-awareness is part of what makes sexual experience feel grounded and true.`,
+  [SC.BA]:`Body Acceptance captures the need to feel comfortable and at home in one's body as a condition for sex to feel fully present and enjoyable. For people who score high here, that physical ease is part of what makes genuine engagement possible.`,
+  [SC.SS]:`Sexual Self-Expression captures the need to feel free to express one's authentic sexual self during sex as a condition for it to feel meaningful. For people who score high here, that freedom within the experience itself is what makes sex feel fully inhabited.`,
+  [SC.PR]:`Privacy captures the need to keep one's sexuality personal and protected as a condition for sex to feel right. For people who score high here, that boundary around what is shared and with whom is part of what makes sexual experience feel safe and their own.`,
+};
+
+function gapTag(g){
+  return g>=2
+    ?`<span class="gap-tag gap-unmet">This value matters to you and may not be getting the space it needs right now.</span>`
+    :`<span class="gap-tag gap-met">This value is active in your life right now.</span>`;
+}
+
+
+function renderResults(){
+  const {rankedMeanings,rankedDomains,topSubcats}=computeResults();
+  const top=rankedMeanings[0];
+  const top2dom=rankedDomains.slice(0,2);
+
+  document.getElementById('results-content').innerHTML=`
+    <div class="results-header">
+      <h1>Your Results</h1>
+      <p>Sexual Values Quiz</p>
+    </div>
+
+    <div class="orientation-card">
+      <p>Your results are organized in three layers:</p>
+      <ol class="orientation-list">
+        <li><span class="ol-num">1.</span><strong>Your top sexual value</strong> — the single meaning that came up strongest for you. This is the foundation. It shapes why sex matters to you and sets the context for everything else in your results.</li>
+        <li><span class="ol-num">2.</span><strong>Your top two domains</strong> — the areas of sexual experience where your values are most active. Think of these as the broad categories of your sexual life where what you need shows up most clearly.</li>
+        <li><span class="ol-num">3.</span><strong>Your top sub-categories</strong> — the specific needs within each domain where your values are sharpest and where there may be a gap between what matters to you and what is actually present in your life right now.</li>
+      </ol>
+      <p>These results are a starting point, not a final word. They are meant to give you something concrete to reflect on, to bring into a conversation with a partner, or to explore further with your therapist.</p>
+      <p>Your results will be emailed to you and to your clinician. If you entered a couple code, you and your partner will each receive a separate summary along with a note about where your values overlap once both of you have completed the quiz.</p>
+    </div>
+
+    <span class="section-label">Your top sexual value</span>
+
+    <div class="top-meaning-card">
+      <div class="meaning-eyebrow">Top meaning</div>
+      <div class="meaning-name">Sex as ${top.meaning}</div>
+      <div class="meaning-score-row">
+        <div class="meaning-pct">${top.impScore}%</div>
+        <div class="meaning-pct-label">importance score</div>
+      </div>
+      <div class="meaning-description">${MEANING_FULL[top.meaning]}</div>
+    </div>
+
+    <div class="meanings-list-card">
+      <h3>All your meanings, ranked</h3>
+      ${rankedMeanings.map((m,i)=>`
+        <div class="meaning-list-item">
+          <div class="ml-num">${i+1}</div>
+          <div>
+            <div class="ml-name">Sex as ${m.meaning}</div>
+            <div class="ml-desc">${MEANING_SHORT[m.meaning]}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <span class="section-label">Your top domains</span>
+
+    ${top2dom.map((d,i)=>`
+      <div class="domain-card">
+        <div class="domain-eyebrow">Domain ${i+1}</div>
+        <div class="domain-name">${d.domain}</div>
+        <div class="domain-description">${DOMAIN_DESC[d.domain]}</div>
+        ${topSubcats[d.domain].map(sc=>`
+          <div class="subcategory">
+            <div class="sc-name">${sc.subcat}</div>
+            <div class="sc-description">${SUBCAT_DESC[sc.subcat]}</div>
+            ${gapTag(sc.gapScore)}
+          </div>`).join('')}
+      </div>`).join('')}
+  `;
+}
+
+document.getElementById('begin-btn').addEventListener('click',()=>showScreen('screen-email'));
+
+const anonCheck=document.getElementById('anon-check');
+const nameInput=document.getElementById('name');
+anonCheck.addEventListener('change',function(){
+  if(this.checked){nameInput.value='';nameInput.disabled=true;nameInput.placeholder='Anonymous';}
+  else{nameInput.disabled=false;nameInput.placeholder='First name or full name';}
+});
+
+document.getElementById('email-back').addEventListener('click',()=>showScreen('screen-intro'));
+document.getElementById('email-next').addEventListener('click',()=>{
+  currentQ=0;
+  renderQuestion(0,'forward');
+  showScreen('screen-question');
+});
+
+document.getElementById('q-back').addEventListener('click',()=>{
+  saveCurrentResponse();
+  if(currentQ===0){showScreen('screen-email');}
+  else{currentQ--;renderQuestion(currentQ,'back');window.scrollTo(0,0);}
+});
+
+document.getElementById('q-next').addEventListener('click',()=>{
+  saveCurrentResponse();
+  if(currentQ<TOTAL-1){currentQ++;renderQuestion(currentQ,'forward');window.scrollTo(0,0);}
+  else{submitAndShowResults();}
+});
+
+async function submitAndShowResults() {
+  // Render results first so the user isn't waiting
+  renderResults();
+  showScreen('screen-results');
+
+  // Build payload
+  const { rankedMeanings, rankedDomains, topSubcats, scScores } = computeResults();
+
+  const respondent = {
+    email: (document.getElementById('email')?.value || '').trim(),
+    name: (document.getElementById('name')?.value || '').trim(),
+    coupleCode: (document.getElementById('couple-code')?.value || '').trim() || null,
+  };
+
+  // Enrich meanings with full description text for client email
+  const rankedMeaningsWithDesc = rankedMeanings.map(m => ({
+    ...m,
+    fullDescription: MEANING_FULL[m.meaning] || '',
+  }));
+
+  // Enrich top subcats with description text
+  const topSubcatsWithDesc = {};
+  Object.entries(topSubcats).forEach(([domain, scs]) => {
+    topSubcatsWithDesc[domain] = scs.map(sc => ({
+      ...sc,
+      description: SUBCAT_DESC[sc.subcat] || '',
+    }));
+  });
+
+  // Clinician flags — computed here, extend as needed
+  const highImportanceHighGap = Object.entries(scScores)
+    .filter(([, s]) => s.impScore >= 4 && s.gapScore >= 2)
+    .map(([sc]) => sc);
+
+  const feelingSafeScore = scScores['Feeling Safe']?.impScore || 0;
+  const exclusivityScore = scScores['Exclusivity']?.impScore || 0;
+  const spontaneityScore = scScores['Spontaneity']?.impScore || 0;
+  const deliberatenessScore = scScores['Deliberateness']?.impScore || 0;
+
+  const clinicianFlags = {
+    meaningDivergence: rankedMeanings.length > 1 && (rankedMeanings[0].impScore - rankedMeanings[1].impScore) < 10,
+    meaningDivergenceNote: rankedMeanings.length > 1 && (rankedMeanings[0].impScore - rankedMeanings[1].impScore) < 10
+      ? `Top two meanings within 10 points: ${rankedMeanings[0].meaning} (${rankedMeanings[0].impScore}%) and ${rankedMeanings[1].meaning} (${rankedMeanings[1].impScore}%)`
+      : '',
+    highImportanceHighGap,
+    exclusivityFeelinSafeDivergence: Math.abs(exclusivityScore - feelingSafeScore) >= 1.5,
+    spontaneityDeliberatenessBothHigh: spontaneityScore >= 3.5 && deliberatenessScore >= 3.5,
+  };
+
+  // Security-around-attraction subscale: FS.4 + FS.5
+  const fs4 = responses['FS.4'] ? 6 - (responses['FS.4'].importance || 3) : null; // reverse-scored
+  const fs5 = responses['FS.5'] ? responses['FS.5'].importance : null;
+  const securityAroundAttraction = (fs4 !== null && fs5 !== null) ? ((fs4 + fs5) / 2).toFixed(2) : null;
+
+  // Raw responses
+  const rawResponses = { ...responses };
+
+  const payload = {
+    respondent,
+    rankedMeanings: rankedMeaningsWithDesc,
+    rankedDomains,
+    topSubcats: topSubcatsWithDesc,
+    scScores,
+    clinicianFlags,
+    securityAroundAttraction,
+    rawResponses,
+  };
+
+  try {
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      console.error('SVQ submit failed:', await res.text());
+    }
+  } catch (err) {
+    console.error('SVQ submit error:', err);
+    // Silent fail — results are already shown, email will not send
+    // TODO: consider adding a visible retry notice if this matters clinically
+  }
+}
+</script>
+</body>
+</html>
