@@ -1496,7 +1496,10 @@ function submitResults(){
     const {rankedMeanings,rankedDomains,topSubcats,scScores}=computeResults();
 
     // Enrich rankedMeanings with full description
-    const enriched=rankedMeanings.map(m=>({...m,fullDescription:MEANING_FULL[m.meaning]||''}));
+    const enriched=rankedMeanings.map(m=>({...m,fullDescription:MEANING_FULL[m.meaning]||'',shortDescription:MEANING_SHORT[m.meaning]||''}));
+    const enrichedDomains=rankedDomains.map(d=>({...d,description:DOMAIN_DESC[d.domain]||''}));
+    const enrichedSubcats={};
+    Object.entries(topSubcats).forEach(([dom,scs])=>{enrichedSubcats[dom]=scs.map(sc=>({...sc,description:SUBCAT_DESC[sc.subcat]||''}));});
 
     // Respondent info
     const email=document.getElementById('email').value.trim();
@@ -1526,7 +1529,7 @@ function submitResults(){
     const fs4v=fs4?fs4.importance:null;const fs5v=fs5?fs5.importance:null;
     const securityAroundAttraction=(fs4v!==null&&fs5v!==null)?parseFloat(((fs4v+fs5v)/2).toFixed(2)):null;
 
-    const payload={respondent,rankedMeanings:enriched,rankedDomains,topSubcats,scScores,clinicianFlags,securityAroundAttraction};
+    const payload={respondent,rankedMeanings:enriched,rankedDomains:enrichedDomains,topSubcats:enrichedSubcats,scScores,clinicianFlags,securityAroundAttraction};
 
     fetch('/api/submit',{
       method:'POST',
