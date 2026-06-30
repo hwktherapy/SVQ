@@ -112,7 +112,7 @@ function buildClientEmail(payload) {
         <tr><td style="padding:24px 36px 0;">
           <div style="text-align:center;padding:24px;background:#f9f9f9;border-radius:10px;">
             <p style="font-size:15px;color:#1a2744;font-weight:600;margin:0 0 16px;">Ready to talk through your results?</p>
-            <a href="https://hannah-wood-kraft.clientsecure.me/" style="display:inline-block;padding:14px 28px;background:#d4aa70;color:#ffffff;font-weight:600;font-size:15px;text-decoration:none;border-radius:6px;">Book a session with your therapist</a>
+            <a href="https://hannah-wood-kraft.clientsecure.me/" style="display:inline-block;padding:14px 28px;background:#d4aa70;color:#ffffff;font-weight:600;font-size:15px;text-decoration:none;border-radius:6px;">Book a session to talk</a>
           </div>
         </td></tr>
 
@@ -132,41 +132,66 @@ function buildClientEmail(payload) {
 
 // ── CLINICIAN EMAIL HTML ──────────────────────────────────────────────────────
 function buildClinicianEmail(payload) {
-  const { respondent, rankedMeanings, rankedDomains, topSubcats, scScores, clinicianFlags, securityAroundAttraction, rawResponses, submittedAt } = payload;
+  const { respondent, rankedMeanings, rankedDomains, topSubcats, scScores, clinicianFlags, securityAroundAttraction, submittedAt } = payload;
 
-  const meaningRows = rankedMeanings.map(m => `
+  const gapColor = (g) => g >= 2 ? '#c0392b' : '#27ae60';
+  const gapLabel = (g) => g >= 2 ? 'Gap' : 'Met';
+
+  // All meanings
+  const meaningRows = rankedMeanings.map((m, i) => `
     <tr>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;color:#1a2744;">${m.meaning}</td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;">${m.impScore}%</td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;">${m.gapScore}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;font-size:13px;width:24px;">${i + 1}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;">
+        <div style="font-weight:600;color:#1a2744;font-size:15px;">Sex as ${m.meaning}</div>
+        <div style="font-size:13px;color:#555;margin-top:2px;">${m.shortDescription || ''}</div>
+      </td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;">
+        <div style="font-weight:700;color:#1a2744;font-size:15px;">${m.impScore}%</div>
+        <div style="font-size:12px;font-weight:600;color:${gapColor(m.gapScore)};">${gapLabel(m.gapScore)} (${m.gapScore > 0 ? '+' : ''}${m.gapScore})</div>
+      </td>
     </tr>`).join('');
 
-  const domainRows = rankedDomains.map(d => `
-    <tr>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;color:#1a2744;">${d.domain}</td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;">${d.score.toFixed(2)}</td>
-    </tr>`).join('');
+  // All domains with all subcats
+  const domainSections = rankedDomains.map((d, i) => {
+    const allSubcats = Object.entries(scScores || {})
+      .filter(([, s]) => s.domain === d.domain)
+      .sort(([, a], [, b]) => b.rankingScore - a.rankingScore);
 
-  const subcatRows = Object.entries(scScores || {}).map(([sc, s]) => `
-    <tr>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px;">${sc}</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px;">${s.impScore.toFixed(2)}</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px;">${s.gapScore.toFixed(3)}</td>
-      <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px;">${s.rankingScore.toFixed(2)}</td>
-    </tr>`).join('');
+    const subcatRows = allSubcats.map(([sc, s]) => `
+      <tr>
+        <td style="padding:7px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;">${sc}</td>
+        <td style="padding:7px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;font-weight:600;color:#1a2744;">${Math.round((s.impScore / 5) * 100)}%</td>
+        <td style="padding:7px 12px;border-bottom:1px solid #f0f0f0;font-size:13px;text-align:right;font-weight:700;color:${gapColor(s.gapScore)};">${gapLabel(s.gapScore)} (${s.gapScore > 0 ? '+' : ''}${s.gapScore.toFixed(2)})</td>
+      </tr>`).join('');
 
+    return `
+      <div style="background:#f9f9f9;border-radius:8px;padding:20px;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Domain ${i + 1}</div>
+        <div style="font-size:18px;font-weight:700;color:#1a2744;font-family:Georgia,serif;margin-bottom:12px;">${d.domain}</div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e8e8;border-radius:6px;overflow:hidden;background:#fff;">
+          <tr style="background:#f0f0f0;">
+            <td style="padding:6px 12px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;">Sub-category</td>
+            <td style="padding:6px 12px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;text-align:right;">Agreement</td>
+            <td style="padding:6px 12px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;text-align:right;">Gap</td>
+          </tr>
+          ${subcatRows}
+        </table>
+      </div>`;
+  }).join('');
+
+  // Clinician flags
   const flags = clinicianFlags || {};
   const flagHTML = `
-    <tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;">Meaning divergence</td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;">${flags.meaningDivergence ? `Yes — ${flags.meaningDivergenceNote || ''}` : 'No'}</td></tr>
-    <tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;">High importance / high gap subcats</td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;">${flags.highImportanceHighGap?.length ? flags.highImportanceHighGap.join(', ') : 'None'}</td></tr>
-    <tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;">Exclusivity vs Feeling Safe divergence</td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;">${flags.exclusivityFeelinSafeDivergence ? 'Yes' : 'No'}</td></tr>
-    <tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;">Spontaneity + Deliberateness both high</td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;">${flags.spontaneityDeliberatenessBothHigh ? 'Yes' : 'No'}</td></tr>
-    <tr><td style="padding:7px 10px;font-weight:600;">Security-around-attraction subscale</td>
-      <td style="padding:7px 10px;">${securityAroundAttraction ?? 'N/A'}</td></tr>`;
+    <tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;font-size:13px;">Meaning divergence</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:13px;">${flags.meaningDivergence ? `Yes — ${flags.meaningDivergenceNote || ''}` : 'No'}</td></tr>
+    <tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;font-size:13px;">High importance / high gap subcats</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:13px;">${flags.highImportanceHighGap?.length ? flags.highImportanceHighGap.join(', ') : 'None'}</td></tr>
+    <tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;font-size:13px;">Exclusivity vs Feeling Safe divergence</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:13px;">${flags.exclusivityFeelinSafeDivergence ? 'Yes' : 'No'}</td></tr>
+    <tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;font-size:13px;">Spontaneity + Deliberateness both high</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:13px;">${flags.spontaneityDeliberatenessBothHigh ? 'Yes' : 'No'}</td></tr>
+    <tr><td style="padding:7px 10px;font-weight:600;font-size:13px;">Security-around-attraction subscale</td>
+      <td style="padding:7px 10px;font-size:13px;">${securityAroundAttraction ?? 'N/A'}</td></tr>`;
 
   const coupleNote = respondent.coupleCode
     ? `<tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;">Couple code</td><td style="padding:7px 10px;border-bottom:1px solid #eee;">${respondent.coupleCode}</td></tr>`
@@ -184,18 +209,10 @@ function buildClinicianEmail(payload) {
         <tr><td style="background:#1a2744;padding:24px 32px;">
           <div style="font-size:11px;color:#d4aa70;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">SVQ Clinician Report</div>
           <div style="font-size:22px;font-weight:700;color:#fff;font-family:Georgia,serif;">Full Results — ${respondent.name || 'Anonymous'}</div>
-          <div style="font-size:13px;color:#aab4cc;margin-top:4px;">${submittedAt || ''}</div>
+          <div style="font-size:13px;color:#aab4cc;margin-top:4px;">${submittedAt || ''} &nbsp;·&nbsp; ${respondent.email}</div>
         </td></tr>
 
         <tr><td style="padding:24px 32px 0;">
-
-          <!-- Respondent -->
-          <div style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Respondent</div>
-          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:6px;margin-bottom:24px;">
-            <tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;width:200px;">Email</td><td style="padding:7px 10px;border-bottom:1px solid #eee;">${respondent.email}</td></tr>
-            <tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-weight:600;">Name</td><td style="padding:7px 10px;border-bottom:1px solid #eee;">${respondent.name || 'Anonymous'}</td></tr>
-            ${coupleNote}
-          </table>
 
           <!-- Clinician Flags -->
           <div style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Clinician Flags</div>
@@ -203,43 +220,20 @@ function buildClinicianEmail(payload) {
             ${flagHTML}
           </table>
 
-          <!-- Meanings -->
-          <div style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Meanings (ranked)</div>
-          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:6px;margin-bottom:24px;">
-            <tr style="background:#f9f9f9;">
-              <td style="padding:7px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">MEANING</td>
-              <td style="padding:7px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">AGREEMENT %</td>
-              <td style="padding:7px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">GAP</td>
-            </tr>
+          <!-- All Meanings -->
+          <div style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">All Meanings (ranked)</div>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:8px;overflow:hidden;margin-bottom:24px;">
             ${meaningRows}
           </table>
 
-          <!-- Domains -->
-          <div style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Domains</div>
-          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:6px;margin-bottom:24px;">
-            <tr style="background:#f9f9f9;">
-              <td style="padding:7px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">DOMAIN</td>
-              <td style="padding:7px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">SCORE</td>
-            </tr>
-            ${domainRows}
-          </table>
-
-          <!-- Sub-categories -->
-          <div style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Sub-categories (all 18)</div>
-          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:6px;margin-bottom:24px;">
-            <tr style="background:#f9f9f9;">
-              <td style="padding:6px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">SUBCAT</td>
-              <td style="padding:6px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">IMP</td>
-              <td style="padding:6px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">GAP</td>
-              <td style="padding:6px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">RANK</td>
-            </tr>
-            ${subcatRows}
-          </table>
+          <!-- Domains + Sub-categories -->
+          <div style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px;">Domains and Sub-categories</div>
+          ${domainSections}
 
         </td></tr>
 
         <tr><td style="padding:16px 32px 24px;border-top:1px solid #eee;">
-          <p style="font-size:12px;color:#999;margin:0;">SVQ — confidential clinical data. Raw responses available on request.</p>
+          <p style="font-size:12px;color:#999;margin:0;">SVQ — confidential clinical data.</p>
         </td></tr>
 
       </table>
