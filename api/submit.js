@@ -31,6 +31,7 @@ function buildClientEmail(payload) {
       <td style="padding:8px 12px;border-bottom:1px solid #eee;">
         <div style="font-weight:600;color:#1a2744;font-size:15px;">Sex as ${m.meaning}</div>
         <div style="font-size:13px;color:#555;margin-top:2px;">${m.impScore}% agreement</div>
+        <div style="font-size:13px;color:#777;margin-top:4px;line-height:1.5;">${m.shortDescription || ''}</div>
       </td>
     </tr>`).join('');
 
@@ -50,7 +51,8 @@ function buildClientEmail(payload) {
     return `
       <div style="background:#f9f9f9;border-radius:8px;padding:20px;margin-bottom:16px;">
         <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Domain ${i + 1}</div>
-        <div style="font-size:20px;font-weight:700;color:#1a2744;font-family:Georgia,serif;margin-bottom:14px;">${d.domain}</div>
+        <div style="font-size:20px;font-weight:700;color:#1a2744;font-family:Georgia,serif;margin-bottom:8px;">${d.domain}</div>
+        ${d.description ? `<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:14px;">${d.description}</div>` : ''}
         ${subcatHTML}
       </div>`;
   }).join('');
@@ -104,6 +106,14 @@ function buildClientEmail(payload) {
         <tr><td style="padding:24px 36px 0;">
           <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Your top domains</div>
           ${domainSections}
+        </td></tr>
+
+        <!-- Booking CTA -->
+        <tr><td style="padding:24px 36px 0;">
+          <div style="text-align:center;padding:24px;background:#f9f9f9;border-radius:10px;">
+            <p style="font-size:15px;color:#1a2744;font-weight:600;margin:0 0 16px;">Ready to talk through your results?</p>
+            <a href="https://hannah-wood-kraft.clientsecure.me/" style="display:inline-block;padding:14px 28px;background:#d4aa70;color:#ffffff;font-weight:600;font-size:15px;text-decoration:none;border-radius:6px;">Book a session with your therapist</a>
+          </div>
         </td></tr>
 
         <!-- Footer -->
