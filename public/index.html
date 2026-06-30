@@ -1529,7 +1529,13 @@ function submitResults(){
     const fs4v=fs4?fs4.importance:null;const fs5v=fs5?fs5.importance:null;
     const securityAroundAttraction=(fs4v!==null&&fs5v!==null)?parseFloat(((fs4v+fs5v)/2).toFixed(2)):null;
 
-    const payload={respondent,rankedMeanings:enriched,rankedDomains:enrichedDomains,topSubcats:enrichedSubcats,scScores,clinicianFlags,securityAroundAttraction};
+    // Build description lookups for clinician email
+    const subcatDescs={};
+    Object.values(SC).forEach(sc=>{subcatDescs[sc]=SUBCAT_DESC[sc]||'';});
+    const domainDescs={};
+    Object.values(DOM).forEach(dom=>{domainDescs[dom]=DOMAIN_DESC[dom]||'';});
+
+    const payload={respondent,rankedMeanings:enriched,rankedDomains:enrichedDomains,topSubcats:enrichedSubcats,scScores,clinicianFlags,securityAroundAttraction,subcatDescs,domainDescs};
 
     fetch('/api/submit',{
       method:'POST',
