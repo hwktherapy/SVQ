@@ -1,15 +1,15 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 const ses = new SESClient({
-  region: process.env.AWS_SES_REGION,
+  region: process.env.AWS_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
 });
 
-const CLINICIAN_EMAIL = process.env.CLINICIAN_EMAIL; // hannah@hwktherapy.com once set up
-const FROM_EMAIL = process.env.FROM_EMAIL;           // noreply@hwktherapy.com or similar
+const CLINICIAN_EMAIL = process.env.CLINICIAN_EMAIL;
+const FROM_EMAIL = process.env.FROM_EMAIL;
 
 // ── GAP TAG TEXT ──────────────────────────────────────────────────────────────
 function gapText(gapScore) {
@@ -23,14 +23,14 @@ function buildClientEmail(payload) {
   const { respondent, rankedMeanings, rankedDomains, topSubcats } = payload;
   const name = respondent.name || "there";
   const top = rankedMeanings[0];
-  const top2dom = rankedDomains.slice(0, 2);
+  const top2dom = rankedDomains;
 
   const meaningRows = rankedMeanings.map((m, i) => `
     <tr>
       <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;font-size:13px;width:24px;">${i + 1}</td>
       <td style="padding:8px 12px;border-bottom:1px solid #eee;">
         <div style="font-weight:600;color:#1a2744;font-size:15px;">Sex as ${m.meaning}</div>
-        <div style="font-size:13px;color:#555;margin-top:2px;">${m.impScore}% importance</div>
+        <div style="font-size:13px;color:#555;margin-top:2px;">${m.impScore}% agreement</div>
       </td>
     </tr>`).join('');
 
@@ -198,7 +198,7 @@ function buildClinicianEmail(payload) {
           <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:6px;margin-bottom:24px;">
             <tr style="background:#f9f9f9;">
               <td style="padding:7px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">MEANING</td>
-              <td style="padding:7px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">IMP %</td>
+              <td style="padding:7px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">AGREEMENT %</td>
               <td style="padding:7px 10px;font-weight:700;font-size:12px;border-bottom:1px solid #eee;">GAP</td>
             </tr>
             ${meaningRows}
@@ -245,7 +245,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // CORS — tighten this to your actual domain once deployed
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
