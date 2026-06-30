@@ -167,7 +167,10 @@ function buildClinicianEmail(payload) {
     return `
       <div style="background:#f9f9f9;border-radius:8px;padding:20px;margin-bottom:16px;">
         <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Domain ${i + 1}</div>
-        <div style="font-size:18px;font-weight:700;color:#1a2744;font-family:Georgia,serif;margin-bottom:12px;">${d.domain}</div>
+        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px;">
+          <div style="font-size:18px;font-weight:700;color:#1a2744;font-family:Georgia,serif;">${d.domain}</div>
+          <div style="font-size:16px;font-weight:700;color:#d4aa70;">${Math.round((d.score / 5) * 100)}%</div>
+        </div>
         <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e8e8;border-radius:6px;overflow:hidden;background:#fff;">
           <tr style="background:#f0f0f0;">
             <td style="padding:6px 12px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;">Sub-category</td>
