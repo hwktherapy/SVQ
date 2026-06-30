@@ -132,7 +132,7 @@ function buildClientEmail(payload) {
 
 // ── CLINICIAN EMAIL HTML ──────────────────────────────────────────────────────
 function buildClinicianEmail(payload) {
-  const { respondent, rankedMeanings, rankedDomains, topSubcats, scScores, clinicianFlags, securityAroundAttraction, submittedAt } = payload;
+  const { respondent, rankedMeanings, rankedDomains, topSubcats, scScores, clinicianFlags, securityAroundAttraction, submittedAt, subcatDescs, domainDescs } = payload;
 
   const gapColor = (g) => g >= 2 ? '#c0392b' : '#27ae60';
   const gapLabel = (g) => g >= 2 ? 'Gap' : 'Met';
@@ -159,18 +159,22 @@ function buildClinicianEmail(payload) {
 
     const subcatRows = allSubcats.map(([sc, s]) => `
       <tr>
-        <td style="padding:7px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#333;">${sc}</td>
-        <td style="padding:7px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;font-weight:600;color:#1a2744;">${Math.round((s.impScore / 5) * 100)}%</td>
-        <td style="padding:7px 12px;border-bottom:1px solid #f0f0f0;font-size:13px;text-align:right;font-weight:700;color:${gapColor(s.gapScore)};">${gapLabel(s.gapScore)} (${s.gapScore > 0 ? '+' : ''}${s.gapScore.toFixed(2)})</td>
+        <td style="padding:7px 12px;border-bottom:1px solid #f0f0f0;">
+          <div style="font-size:14px;font-weight:600;color:#333;">${sc}</div>
+          ${subcatDescs && subcatDescs[sc] ? `<div style="font-size:12px;color:#777;line-height:1.5;margin-top:2px;">${subcatDescs[sc]}</div>` : ''}
+        </td>
+        <td style="padding:7px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;font-weight:600;color:#1a2744;vertical-align:top;">${Math.round((s.impScore / 5) * 100)}%</td>
+        <td style="padding:7px 12px;border-bottom:1px solid #f0f0f0;font-size:13px;text-align:right;font-weight:700;color:${gapColor(s.gapScore)};vertical-align:top;">${gapLabel(s.gapScore)} (${s.gapScore > 0 ? '+' : ''}${s.gapScore.toFixed(2)})</td>
       </tr>`).join('');
 
     return `
       <div style="background:#f9f9f9;border-radius:8px;padding:20px;margin-bottom:16px;">
         <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Domain ${i + 1}</div>
-        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px;">
+        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px;">
           <div style="font-size:18px;font-weight:700;color:#1a2744;font-family:Georgia,serif;">${d.domain}</div>
           <div style="font-size:16px;font-weight:700;color:#d4aa70;">${Math.round((d.score / 5) * 100)}%</div>
         </div>
+        ${domainDescs && domainDescs[d.domain] ? `<div style="font-size:13px;color:#555;line-height:1.55;margin-bottom:12px;">${domainDescs[d.domain]}</div>` : ''}
         <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e8e8;border-radius:6px;overflow:hidden;background:#fff;">
           <tr style="background:#f0f0f0;">
             <td style="padding:6px 12px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;">Sub-category</td>
