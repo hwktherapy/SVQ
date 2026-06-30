@@ -342,7 +342,7 @@ input[type="range"] {
   width: 100%;
   height: 4px;
   border-radius: 99px;
-  background: #e8e8e8;
+  background: #c8c8c8;
   outline: none;
   cursor: pointer;
 }
@@ -397,9 +397,10 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
   display: flex;
   justify-content: space-between;
   margin-top: 7px;
+  padding: 0 12px;
 }
 .tick { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.tick-mark { width: 1px; height: 5px; background: #d0d0d0; }
+.tick-mark { width: 1px; height: 5px; background: transparent; }
 .tick-num { font-size: 13px; color: #bbb; font-family: 'Outfit', sans-serif; }
 
 .scale-labels {
@@ -697,8 +698,58 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
   border: 1px solid #f5d9a8;
 }
 
-/* ── INTRO SCREEN SPECIFICS ── */
-#screen-intro .page { padding-bottom: 0; }
+.results-footer {
+  margin-top: 2rem;
+  padding: 1.75rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  text-align: center;
+}
+.results-footer-note {
+  font-size: 15px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+.results-footer-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.btn-results {
+  width: 100%;
+  padding: 0.95rem 1.25rem;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+.btn-results-primary {
+  background: var(--gold);
+  border: 1.5px solid var(--gold);
+  color: var(--navy-deep);
+  font-weight: 600;
+}
+.btn-results-primary:hover { background: #b8882a; border-color: #b8882a; }
+.btn-results-secondary {
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.22);
+  color: #fff;
+}
+.btn-results-secondary:hover { background: rgba(255,255,255,0.08); }
+
+/* ── INTRO BLUR-TO-FOCUS ── */
+@keyframes blurFocus {
+  from { opacity: 0; filter: blur(10px); }
+  to   { opacity: 1; filter: blur(0px); }
+}
+.intro-item { opacity: 0; }
+.intro-item.blur-in {
+  animation: blurFocus 1.3s cubic-bezier(0.22,1,0.36,1) forwards;
+}
 
 </style>
 </head>
@@ -716,12 +767,12 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 <!-- ── INTRO ── -->
 <div class="screen active" id="screen-intro">
   <div class="page">
-    <div class="page-header">
+    <div class="page-header intro-item">
       <h1 class="page-title">Sexual Values Quiz</h1>
       <p class="page-byline">by Hannah Wood-Kraft LMFT-Associate, CST</p>
     </div>
 
-    <div class="card">
+    <div class="card intro-item">
       <h2>This quiz is about your sexual values — and if that phrase doesn't mean much to you yet, that's exactly why you're here.</h2>
       <p>A sexual value is a guide for putting meaning to your sexual motivations. It's what you need for sex to feel good, meaningful, and right — the conditions that have to be present. Your values shape why you want sex and what makes it feel right or wrong. They're not fixed. They change over a lifetime, and most people have never been asked to name them.</p>
       <p>This quiz is built on the work of sex therapist Doug Braun-Harvey, who identified six principles of sexual health:</p>
@@ -736,25 +787,25 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
       <p>We're focused on the fourth because knowing what you value sexually changes how you understand yourself and how you connect with others.</p>
     </div>
 
-    <div class="card">
+    <div class="card intro-item">
       <h2>Why this matters</h2>
       <p>Your sexual values are already shaping your experience whether you've named them or not. They're behind the things that feel connecting or hollow, satisfying or off. When they go unnamed it's hard to know what you're actually looking for, let alone ask for it.</p>
       <p>Knowing your values gives you a place to start — with yourself, with a partner, or in the work you're doing with your therapist.</p>
     </div>
 
-    <div class="card">
+    <div class="card intro-item">
       <h2>How to use this quiz</h2>
       <p>There are no right answers here. What you're going to get is a starting point, not a verdict, not a diagnosis.</p>
       <p>Some questions might feel difficult to answer. Take your time and try to be as honest as you can. The quiz works best when you answer based on what's actually true for you, not what you think should be.</p>
-      <p>There are three types of questions. For most statements, you'll use two sliders — one for how important something is to you, and one for how present it feels right now. Some questions ask you to rate how well a statement fits you. A small number ask you to choose between two options.</p>
+      <p>There are three types of questions. For most statements, you'll use two sliders. The first asks how much you agree with the statement, from strongly disagree to strongly agree. The second asks how present that same thing actually is in your current life, regardless of how much you agree with it. For example, if a statement reads "Sex is one of the main ways I unwind and decompress," the first slider is asking whether you agree that's true of you in general, and the second is asking how present that actually is in your sex life right now. Some questions ask you to rate how well a statement fits you. A small number ask you to choose between two options.</p>
     </div>
 
-    <div class="card">
+    <div class="card intro-item">
       <h2>A note on privacy</h2>
       <p>Your individual answers are private. What gets shared with your clinician are your results — the values that came up strongest and where there may be gaps between what you need and what you're experiencing. Nobody sees your response to any specific question.</p>
     </div>
   </div>
-  <div class="btn-strip">
+  <div class="btn-strip intro-item">
     <button class="btn btn-primary btn-full" id="begin-btn">Begin</button>
   </div>
 </div>
@@ -762,11 +813,11 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 <!-- ── EMAIL ── -->
 <div class="screen" id="screen-email">
   <div class="page">
-    <div class="page-header">
+    <div class="page-header intro-item">
       <p class="eyebrow">Getting started</p>
       <h1 class="page-title">Before we begin</h1>
     </div>
-    <div class="card">
+    <div class="card intro-item">
       <div class="field">
         <label for="email">Your email <span class="required">*</span></label>
         <div class="hint">Your results will be sent here and shared with your clinician.</div>
@@ -776,7 +827,7 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
       <div class="field">
         <label for="name">Your name <span class="optional">optional</span></label>
         <div class="hint">Used only to personalize your results.</div>
-        <input type="text" id="name" placeholder="First name or full name" />
+        <input type="text" id="name" placeholder="First &amp; last name" />
         <label class="checkbox-row">
           <input type="checkbox" id="anon-check" />
           <span>Stay anonymous</span>
@@ -821,7 +872,7 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 
 <!-- ── RESULTS ── -->
 <div class="screen" id="screen-results">
-  <div class="results-page" id="results-content"></div>
+  <div class="results-page intro-item" id="results-content"></div>
 </div>
 
 </div><!-- .app -->
@@ -878,16 +929,16 @@ const dualQuestions = [
   {id:'FS.4',type:DUAL,text:'I cannot enjoy sex when I know the person I\'m with finds other people attractive.',subcat:SC.FS,reverseScore:true},
   {id:'FS.5',type:DUAL,text:'Knowing my sexual partner is attracted to others doesn\'t threaten my ability to feel sexually present with them.',subcat:SC.FS},
   {id:'D1.1',type:DUAL,text:'Feeling wanted and desired matters to how I experience sex.',subcat:SC.DE},
-  {id:'D1.2',type:DUAL,text:'Sex feels hollow or unsatisfying when I do not feel wanted.',subcat:SC.DE},
+  {id:'D1.2',type:DUAL,text:'Sex feels hollow or unsatisfying when I do not feel wanted.',subcat:SC.DE,reversePresence:true},
   {id:'S1.1',type:DUAL,text:'Sex feels more satisfying when it happens spontaneously and in the moment.',subcat:SC.SP},
   {id:'S1.2',type:DUAL,text:'Unplanned sex tends to feel more alive and exciting to me than sex I know is coming.',subcat:SC.SP},
   {id:'DL.1',type:DUAL,text:'Sex feels more satisfying when it is planned and intentional.',subcat:SC.DL},
   {id:'DL.2',type:DUAL,text:'Knowing sex is planned gives me time to anticipate and look forward to it.',subcat:SC.DL},
   {id:'DL.3',type:DUAL,text:'Planning sex feels like an act of care and intention to me.',subcat:SC.DL},
   {id:'EN.1',type:DUAL,text:'Exploring new things sexually is something I actively seek out to keep my sex life feeling rich.',subcat:SC.EN},
-  {id:'EN.2',type:DUAL,text:'Without trying new things sexually, I feel like sex becomes routine or boring.',subcat:SC.EN},
+  {id:'EN.2',type:DUAL,text:'Without trying new things sexually, I feel like sex becomes routine or boring.',subcat:SC.EN,reversePresence:true},
   {id:'F1.1',type:DUAL,text:'How often I have sex matters to my overall sexual satisfaction.',subcat:SC.FR},
-  {id:'F1.2',type:DUAL,text:'When sex or masturbation is infrequent, I feel disconnected from my partner or from my own sexuality.',subcat:SC.FR},
+  {id:'F1.2',type:DUAL,text:'When sex or masturbation is infrequent, I feel disconnected from my partner or from my own sexuality.',subcat:SC.FR,reversePresence:true},
   {id:'H.1',type:DUAL,text:'Being fully honest about my desires and experiences is central to sex feeling right to me.',subcat:SC.HO},
   {id:'H.2',type:DUAL,text:'I would rather have an uncomfortable honest conversation about sex than avoid it to keep the peace.',subcat:SC.HO},
   {id:'C.1',type:DUAL,text:'Talking openly about what I want and need is an important part of my sexual satisfaction.',subcat:SC.CO},
@@ -897,7 +948,7 @@ const dualQuestions = [
   {id:'EX.1',type:DUAL,text:'Sexual exclusivity is an important part of how I want my relationships to work.',subcat:SC.EX},
   {id:'EX.2',type:DUAL,text:'I want sexual exclusivity to be a clear and agreed-upon part of any relationship I\'m in.',subcat:SC.EX},
   {id:'CM.1',type:DUAL,text:'A sense of lasting commitment makes sex more meaningful to me.',subcat:SC.CM},
-  {id:'CM.2',type:DUAL,text:'I find it hard to fully invest in sex when there\'s no sense of dedication, either to a partner or to myself.',subcat:SC.CM},
+  {id:'CM.2',type:DUAL,text:'I find it hard to fully invest in sex when there\'s no sense of dedication, either to a partner or to myself.',subcat:SC.CM,reversePresence:true},
   {id:'A.1',type:DUAL,text:'Having ownership over my own sexual choices is important to me.',subcat:SC.AU},
   {id:'A.2',type:DUAL,text:'I need to feel that my sexuality belongs to me and is not shaped by others\' expectations.',subcat:SC.AU},
   {id:'SK.1',type:DUAL,text:'I have a clear understanding of what turns me on and what I want sexually.',subcat:SC.SK},
@@ -1056,9 +1107,9 @@ function renderQuestion(index, direction) {
       const reaSet = !!saved;
       card.innerHTML = `
         <p class="statement">${q.text}</p>
-        ${sliderHTML('imp-slider', 'How important is this to me?', 'Not important to me', 'Essential to me', imp, impSet)}
+        ${sliderHTML('imp-slider', 'How much do you agree with this statement?', 'Strongly disagree', 'Strongly agree', imp, impSet)}
         <hr class="slider-divider" />
-        ${sliderHTML('rea-slider', 'How present is this for me right now?', 'Not present for me right now', 'Very present for me right now', rea, reaSet)}
+        ${sliderHTML('rea-slider', 'How present is this in your current life?', 'Not present at all in my life', 'Very present in my life right now', rea, reaSet)}
       `;
     } else if (q.type === SCENARIO) {
       const agr = saved ? saved.agreement : 3;
@@ -1162,7 +1213,7 @@ function computeResults(){
     const directs=dualQuestions.filter(q=>q.subcat===sc);
     const scenarios=scenarioQuestions.filter(q=>q.subcat===sc);
     const imps=directs.map(q=>{const r=responses[q.id];let v=r?r.importance:3;if(q.reverseScore)v=rev(v);return v;});
-    const reas=directs.map(q=>{const r=responses[q.id];let v=r?r.reality:3;if(q.reverseScore)v=rev(v);return v;});
+    const reas=directs.map(q=>{const r=responses[q.id];let v=r?r.reality:3;if(q.reverseScore||q.reversePresence)v=rev(v);return v;});
     const impScore=imps.length?imps.reduce((a,b)=>a+b,0)/imps.length:0;
     const gapScore=imps.length?(imps.map((v,i)=>v-reas[i]).reduce((a,b)=>a+b,0)/imps.length):0;
     let sSum=0,sCnt=0;
@@ -1270,10 +1321,7 @@ function renderResults(){
     <div class="top-meaning-card">
       <div class="meaning-eyebrow">Top meaning</div>
       <div class="meaning-name">Sex as ${top.meaning}</div>
-      <div class="meaning-score-row">
-        <div class="meaning-pct">${top.impScore}%</div>
-        <div class="meaning-pct-label">importance score</div>
-      </div>
+      <div class="meaning-score-row" style="display:none;"></div>
       <div class="meaning-description">${MEANING_FULL[top.meaning]}</div>
     </div>
 
@@ -1303,20 +1351,111 @@ function renderResults(){
             ${gapTag(sc.gapScore)}
           </div>`).join('')}
       </div>`).join('')}
+
+    <div class="results-footer">
+      <p class="results-footer-note">Your full results have been sent to your inbox. The clinician has also received a copy.</p>
+      <div class="results-footer-btns">
+        <a href="https://hannah-wood-kraft.clientsecure.me/" target="_blank" class="btn-results btn-results-primary" style="text-decoration:none;display:block;">Book a session with a sex therapist to talk about your results</a>
+        <button class="btn-results btn-results-secondary" onclick="resetQuiz()">Take the quiz again</button>
+      </div>
+      <a href="https://hwktherapy.com" target="_blank" style="display:block;margin-top:1.25rem;font-size:14px;color:rgba(255,255,255,0.4);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">Learn more at hwktherapy.com</a>
+    </div>
   `;
 }
 
-document.getElementById('begin-btn').addEventListener('click',()=>showScreen('screen-email'));
+let introObserver = null;
+
+function animateIntro(fast){
+  // Clean up any existing observer
+  if(introObserver){ introObserver.disconnect(); introObserver=null; }
+
+  const items = Array.from(document.querySelectorAll('#screen-intro .intro-item'));
+
+  // Reset all to invisible
+  items.forEach(el=>{
+    el.classList.remove('blur-in');
+    el.style.opacity='0';
+    el.style.animationDelay='0ms';
+  });
+  void document.getElementById('screen-intro').offsetWidth;
+
+  if(fast){
+    // Take the quiz again — everything blurs in together fast
+    items.forEach((el,i)=>{
+      el.style.animationDelay=`${i*120}ms`;
+      el.classList.add('blur-in');
+    });
+  } else {
+    // First load — header and first card together immediately
+    items.slice(0,2).forEach(el=>el.classList.add('blur-in'));
+
+    // Remaining items triggered by scroll
+    introObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('blur-in');
+          introObserver.unobserve(entry.target);
+        }
+      });
+    },{threshold:0.15});
+
+    items.slice(2).forEach(el=>introObserver.observe(el));
+  }
+}
+
+function animateResults(){
+  const el = document.getElementById('results-content');
+  el.classList.remove('blur-in');
+  el.style.opacity='0';
+  el.style.animationDelay='0ms';
+  void el.offsetWidth;
+  el.classList.add('blur-in');
+}
+
+function animateEmail(){
+  const items = document.querySelectorAll('#screen-email .intro-item');
+  items.forEach(el=>{
+    el.classList.remove('blur-in');
+    el.style.opacity='0';
+    el.style.animationDelay='0ms';
+  });
+  void document.getElementById('screen-email').offsetWidth;
+  items.forEach(el=>{
+    el.style.animationDelay='0ms';
+    el.classList.add('blur-in');
+  });
+}
+
+// Run on first load
+animateIntro(false);
+
+document.getElementById('begin-btn').addEventListener('click',()=>{
+  showScreen('screen-email');
+  animateEmail();
+});
 
 const anonCheck=document.getElementById('anon-check');
 const nameInput=document.getElementById('name');
 anonCheck.addEventListener('change',function(){
   if(this.checked){nameInput.value='';nameInput.disabled=true;nameInput.placeholder='Anonymous';}
-  else{nameInput.disabled=false;nameInput.placeholder='First name or full name';}
+  else{nameInput.disabled=false;nameInput.placeholder='First & last name';}
+});
+
+// Email validation — Continue button disabled until a valid email is entered
+const emailInput=document.getElementById('email');
+const emailNextBtn=document.getElementById('email-next');
+emailNextBtn.disabled=true;
+
+function isValidEmail(val){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+}
+emailInput.addEventListener('input',function(){
+  emailNextBtn.disabled=!isValidEmail(this.value);
 });
 
 document.getElementById('email-back').addEventListener('click',()=>showScreen('screen-intro'));
 document.getElementById('email-next').addEventListener('click',()=>{
+  if(!isValidEmail(emailInput.value)) return;
   currentQ=0;
   renderQuestion(0,'forward');
   showScreen('screen-question');
@@ -1331,91 +1470,25 @@ document.getElementById('q-back').addEventListener('click',()=>{
 document.getElementById('q-next').addEventListener('click',()=>{
   saveCurrentResponse();
   if(currentQ<TOTAL-1){currentQ++;renderQuestion(currentQ,'forward');window.scrollTo(0,0);}
-  else{submitAndShowResults();}
+  else{renderResults();showScreen('screen-results');animateResults();}
 });
-
-async function submitAndShowResults() {
-  // Render results first so the user isn't waiting
-  renderResults();
-  showScreen('screen-results');
-
-  // Build payload
-  const { rankedMeanings, rankedDomains, topSubcats, scScores } = computeResults();
-
-  const respondent = {
-    email: (document.getElementById('email')?.value || '').trim(),
-    name: (document.getElementById('name')?.value || '').trim(),
-    coupleCode: (document.getElementById('couple-code')?.value || '').trim() || null,
-  };
-
-  // Enrich meanings with full description text for client email
-  const rankedMeaningsWithDesc = rankedMeanings.map(m => ({
-    ...m,
-    fullDescription: MEANING_FULL[m.meaning] || '',
-  }));
-
-  // Enrich top subcats with description text
-  const topSubcatsWithDesc = {};
-  Object.entries(topSubcats).forEach(([domain, scs]) => {
-    topSubcatsWithDesc[domain] = scs.map(sc => ({
-      ...sc,
-      description: SUBCAT_DESC[sc.subcat] || '',
-    }));
-  });
-
-  // Clinician flags — computed here, extend as needed
-  const highImportanceHighGap = Object.entries(scScores)
-    .filter(([, s]) => s.impScore >= 4 && s.gapScore >= 2)
-    .map(([sc]) => sc);
-
-  const feelingSafeScore = scScores['Feeling Safe']?.impScore || 0;
-  const exclusivityScore = scScores['Exclusivity']?.impScore || 0;
-  const spontaneityScore = scScores['Spontaneity']?.impScore || 0;
-  const deliberatenessScore = scScores['Deliberateness']?.impScore || 0;
-
-  const clinicianFlags = {
-    meaningDivergence: rankedMeanings.length > 1 && (rankedMeanings[0].impScore - rankedMeanings[1].impScore) < 10,
-    meaningDivergenceNote: rankedMeanings.length > 1 && (rankedMeanings[0].impScore - rankedMeanings[1].impScore) < 10
-      ? `Top two meanings within 10 points: ${rankedMeanings[0].meaning} (${rankedMeanings[0].impScore}%) and ${rankedMeanings[1].meaning} (${rankedMeanings[1].impScore}%)`
-      : '',
-    highImportanceHighGap,
-    exclusivityFeelinSafeDivergence: Math.abs(exclusivityScore - feelingSafeScore) >= 1.5,
-    spontaneityDeliberatenessBothHigh: spontaneityScore >= 3.5 && deliberatenessScore >= 3.5,
-  };
-
-  // Security-around-attraction subscale: FS.4 + FS.5
-  const fs4 = responses['FS.4'] ? 6 - (responses['FS.4'].importance || 3) : null; // reverse-scored
-  const fs5 = responses['FS.5'] ? responses['FS.5'].importance : null;
-  const securityAroundAttraction = (fs4 !== null && fs5 !== null) ? ((fs4 + fs5) / 2).toFixed(2) : null;
-
-  // Raw responses
-  const rawResponses = { ...responses };
-
-  const payload = {
-    respondent,
-    rankedMeanings: rankedMeaningsWithDesc,
-    rankedDomains,
-    topSubcats: topSubcatsWithDesc,
-    scScores,
-    clinicianFlags,
-    securityAroundAttraction,
-    rawResponses,
-  };
-
-  try {
-    const res = await fetch('/api/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      console.error('SVQ submit failed:', await res.text());
-    }
-  } catch (err) {
-    console.error('SVQ submit error:', err);
-    // Silent fail — results are already shown, email will not send
-    // TODO: consider adding a visible retry notice if this matters clinically
-  }
+function resetQuiz(){
+  // Clear all responses and state
+  Object.keys(responses).forEach(k=>delete responses[k]);
+  currentQ=0;
+  cardInteracted={};
+  // Clear form fields
+  document.getElementById('email').value='';
+  document.getElementById('name').value='';
+  document.getElementById('couple-code').value='';
+  document.getElementById('anon-check').checked=false;
+  nameInput.disabled=false;
+  nameInput.placeholder='First & last name';
+  emailNextBtn.disabled=true;
+  // Return to intro with fast blur-in
+  showScreen('screen-intro');
+  animateIntro(true);
+  window.scrollTo(0,0);
 }
 </script>
 </body>
