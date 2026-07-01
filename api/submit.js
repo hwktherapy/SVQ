@@ -289,6 +289,58 @@ async function saveCoupleSubmission(coupleCode, payload) {
   }));
 }
 
+// ── COMPARISON LOGIC (deterministic — decides WHAT overlaps, not how to say it) ─
+// Rules (locked 2026-06-30):
+//   Meanings: top 3 each, any shared meaning counts, #1-matches-#1 is "strongest"
+//   Domains: top 2 each, rank-agnostic — shared at any rank counts, same rank is "strongest"
+//   Sub-categories: only compared within a domain BOTH partners have in their top 2,
+//     regardless of which rank each partner had that domain at
+function computeComparison(partnerA, partnerB) {
+  const meaningsA = (partnerA.rankedMeanings || []).slice(0, 3);
+  const meaningsB = (partnerB.rankedMeanings || []).slice(0, 3);
+  const sharedMeanings = [];
+  meaningsA.forEach((mA, idxA) => {
+    const idxB = meaningsB.findIndex(mB => mB.meaning === mA.meaning);
+    if (idxB !== -1) {
+      sharedMeanings.push({
+        meaning: mA.meaning,
+        rankA: idxA + 1,
+        rankB: idxB + 1,
+        sameRank: idxA === idxB,
+      });
+    }
+  });
+
+  const domainsA = (partnerA.rankedDomains || []).slice(0, 2);
+  const domainsB = (partnerB.rankedDomains || []).slice(0, 2);
+  const sharedDomains = [];
+  domainsA.forEach((dA, idxA) => {
+    const idxB = domainsB.findIndex(dB => dB.domain === dA.domain);
+    if (idxB !== -1) {
+      sharedDomains.push({
+        domain: dA.domain,
+        rankA: idxA + 1,
+        rankB: idxB + 1,
+        sameRank: idxA === idxB,
+      });
+    }
+  });
+
+  const sharedSubcatsByDomain = {};
+  sharedDomains.forEach(({ domain }) => {
+    const subA = (partnerA.topSubcats && partnerA.topSubcats[domain]) || [];
+    const subB = (partnerB.topSubcats && partnerB.topSubcats[domain]) || [];
+    const shared = subA
+      .filter(sA => subB.some(sB => sB.subcat === sA.subcat))
+      .map(sA => sA.subcat);
+    if (shared.length) sharedSubcatsByDomain[domain] = shared;
+  });
+
+  const hasAnyOverlap = sharedMeanings.length > 0 || sharedDomains.length > 0;
+
+  return { sharedMeanings, sharedDomains, sharedSubcatsByDomain, hasAnyOverlap };
+}
+
 // Handles the couple-code side of a submission. Returns a status object so the
 // handler can decide what (if anything) to do next. Does NOT send any email —
 // individual results emails already sent by this point regardless of couple code.
@@ -317,11 +369,16 @@ async function handleCoupleCode(payload) {
     : [...existing, { email: payload.respondent.email }];
 
   if (updated.length >= 2) {
-    // TODO (next build step): both partners have now submitted under this code.
-    // This is where comparison logic (meanings/domains/sub-categories overlap),
-    // the AI narration call, and the two comparison emails get triggered.
-    // Not built yet — see Doc 1, Couple Code Phase, build queue items 3-6.
-    console.log(`Couple code ${coupleCode} is complete — comparison flow not yet built.`);
+    // Both partners have submitted. Pull the two full records and run the
+    // deterministic comparison. AI narration and the comparison emails are
+    // not built yet — see Doc 1, Couple Code Phase, build queue items 4-6.
+    const finalRecords = await getExistingSubmissions(coupleCode);
+    if (finalRecords.length >= 2) {
+      const [partnerA, partnerB] = finalRecords;
+      const comparison = computeComparison(partnerA, partnerB);
+      console.log(`Couple code ${coupleCode} comparison computed:`, JSON.stringify(comparison));
+      return { coupleCode, status: "ready_for_comparison", comparison };
+    }
     return { coupleCode, status: "ready_for_comparison" };
   }
 
