@@ -838,6 +838,7 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
         <label for="couple-code">Couple code <span class="optional">optional</span></label>
         <div class="hint">If your clinician gave you a code, enter it here to link your results with your partner's.</div>
         <input type="text" id="couple-code" placeholder="Enter code" />
+        <div class="hint" id="couple-code-status" style="display:none;margin-top:6px;"></div>
       </div>
     </div>
   </div>
@@ -1449,13 +1450,66 @@ emailNextBtn.disabled=true;
 function isValidEmail(val){
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 }
-emailInput.addEventListener('input',function(){
-  emailNextBtn.disabled=!isValidEmail(this.value);
+function updateEmailNextBtn(){
+  emailNextBtn.disabled=!isValidEmail(emailInput.value)||coupleCodeLocked;
+}
+emailInput.addEventListener('input',updateEmailNextBtn);
+
+// Couple code validation — checked on blur, before the quiz starts
+const coupleCodeInput=document.getElementById('couple-code');
+const coupleCodeStatus=document.getElementById('couple-code-status');
+let coupleCodeLocked=false;
+
+function setCoupleCodeStatus(text,type){
+  coupleCodeStatus.textContent=text;
+  coupleCodeStatus.style.display=text?'block':'none';
+  coupleCodeStatus.style.color=type==='danger'?'var(--danger,#c0392b)':type==='success'?'var(--success,#2e7d32)':'';
+  coupleCodeInput.style.borderColor=type==='danger'?'var(--danger,#c0392b)':type==='success'?'var(--success,#2e7d32)':'';
+}
+
+coupleCodeInput.addEventListener('blur',async function(){
+  const code=this.value.trim();
+  if(!code){
+    coupleCodeLocked=false;
+    setCoupleCodeStatus('','');
+    updateEmailNextBtn();
+    return;
+  }
+  setCoupleCodeStatus('Checking code…','');
+  try{
+    const res=await fetch('/api/couple-check',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({coupleCode:code})
+    });
+    const data=await res.json();
+    if(data.status==='locked'){
+      coupleCodeLocked=true;
+      setCoupleCodeStatus('This code has already been used.','danger');
+    }else if(data.status==='available'||data.status==='joining'){
+      coupleCodeLocked=false;
+      setCoupleCodeStatus('Code accepted.','success');
+    }else{
+      coupleCodeLocked=false;
+      setCoupleCodeStatus('','');
+    }
+  }catch(err){
+    // If the check itself fails, don't block the person — fail open.
+    // The backend safety net in submit.js still protects against a
+    // third submission on a locked code.
+    coupleCodeLocked=false;
+    setCoupleCodeStatus('','');
+  }
+  updateEmailNextBtn();
+});
+
+coupleCodeInput.addEventListener('input',function(){
+  if(coupleCodeLocked){coupleCodeLocked=false;setCoupleCodeStatus('','');updateEmailNextBtn();}
 });
 
 document.getElementById('email-back').addEventListener('click',()=>showScreen('screen-intro'));
 document.getElementById('email-next').addEventListener('click',()=>{
-  if(!isValidEmail(emailInput.value)) return;
+  if(!isValidEmail(emailInput.value)||coupleCodeLocked) return;
   currentQ=0;
   renderQuestion(0,'forward');
   showScreen('screen-question');
@@ -1481,6 +1535,8 @@ function resetQuiz(){
   document.getElementById('email').value='';
   document.getElementById('name').value='';
   document.getElementById('couple-code').value='';
+  coupleCodeLocked=false;
+  setCoupleCodeStatus('','');
   document.getElementById('anon-check').checked=false;
   nameInput.disabled=false;
   nameInput.placeholder='First & last name';
