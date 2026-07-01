@@ -290,11 +290,28 @@ async function saveCoupleSubmission(coupleCode, payload) {
 }
 
 // ── COMPARISON LOGIC (deterministic — decides WHAT overlaps, not how to say it) ─
-// Rules (locked 2026-06-30):
+// Rules (locked 2026-06-30, extended 2026-07-01):
 //   Meanings: top 3 each, any shared meaning counts, #1-matches-#1 is "strongest"
 //   Domains: top 2 each, rank-agnostic — shared at any rank counts, same rank is "strongest"
 //   Sub-categories: only compared within a domain BOTH partners have in their top 2,
 //     regardless of which rank each partner had that domain at
+//   Gap agreement (added 2026-07-01, for AI narration prompt): for shared meanings and
+//     shared sub-categories only — never domains, which have no gap concept — check
+//     whether both partners' gap status matches (met/unmet, threshold 2+ = unmet,
+//     1 or less = met, per locked scoring rules). "met"/"unmet" if both agree, null if
+//     they diverge or gap data is missing. Narration must stay silent on gap when null.
+function gapStatus(gapScore) {
+  if (typeof gapScore !== 'number' || Number.isNaN(gapScore)) return null;
+  return gapScore >= 2 ? 'unmet' : 'met';
+}
+
+function compareGapAgreement(gapScoreA, gapScoreB) {
+  const statusA = gapStatus(gapScoreA);
+  const statusB = gapStatus(gapScoreB);
+  if (statusA === null || statusB === null) return null;
+  return statusA === statusB ? statusA : null; // null when they disagree
+}
+
 function computeComparison(partnerA, partnerB) {
   const meaningsA = (partnerA.rankedMeanings || []).slice(0, 3);
   const meaningsB = (partnerB.rankedMeanings || []).slice(0, 3);
@@ -302,11 +319,14 @@ function computeComparison(partnerA, partnerB) {
   meaningsA.forEach((mA, idxA) => {
     const idxB = meaningsB.findIndex(mB => mB.meaning === mA.meaning);
     if (idxB !== -1) {
+      const mB = meaningsB[idxB];
       sharedMeanings.push({
         meaning: mA.meaning,
         rankA: idxA + 1,
         rankB: idxB + 1,
         sameRank: idxA === idxB,
+        bothRankedFirst: idxA === 0 && idxB === 0,
+        gapAgreement: compareGapAgreement(mA.gapScore, mB.gapScore),
       });
     }
   });
@@ -322,6 +342,8 @@ function computeComparison(partnerA, partnerB) {
         rankA: idxA + 1,
         rankB: idxB + 1,
         sameRank: idxA === idxB,
+        bothRankedFirst: idxA === 0 && idxB === 0,
+        // No gapAgreement here — domains have no gap concept, never gap-checked.
       });
     }
   });
@@ -332,7 +354,13 @@ function computeComparison(partnerA, partnerB) {
     const subB = (partnerB.topSubcats && partnerB.topSubcats[domain]) || [];
     const shared = subA
       .filter(sA => subB.some(sB => sB.subcat === sA.subcat))
-      .map(sA => sA.subcat);
+      .map(sA => {
+        const sB = subB.find(s => s.subcat === sA.subcat);
+        return {
+          subcat: sA.subcat,
+          gapAgreement: compareGapAgreement(sA.gapScore, sB.gapScore),
+        };
+      });
     if (shared.length) sharedSubcatsByDomain[domain] = shared;
   });
 
