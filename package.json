@@ -2,7 +2,8 @@
   "name": "svq-backend",
   "version": "1.0.0",
   "description": "Sexual Values Quiz backend — email delivery via AWS SES",
-  "dependencies": {
-    "@aws-sdk/client-ses": "^3.600.0"
+   "dependencies": {
+    "@aws-sdk/client-ses": "^3.600.0",
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0"
   }
-}
