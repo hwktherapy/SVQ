@@ -1,4 +1,6 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 const ses = new SESClient({
   region: process.env.AWS_REGION,
@@ -8,6 +10,16 @@ const ses = new SESClient({
   },
 });
 
+const ddbClient = new DynamoDBClient({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
+const ddb = DynamoDBDocumentClient.from(ddbClient);
+
+const COUPLE_TABLE = "svq-couple-submissions";
 const CLINICIAN_EMAIL = process.env.CLINICIAN_EMAIL;
 const FROM_EMAIL = process.env.FROM_EMAIL;
 
@@ -145,13 +157,10 @@ function buildClinicianEmail(payload) {
         <div style="font-weight:600;color:#1a2744;font-size:15px;">Sex as ${m.meaning}</div>
         <div style="font-size:13px;color:#555;margin-top:2px;">${m.shortDescription || ''}</div>
       </td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;">
-        <div style="font-weight:700;color:#1a2744;font-size:15px;">${m.impScore}%</div>
-        <div style="font-size:12px;font-weight:600;color:${gapColor(m.gapScore)};">${gapLabel(m.gapScore)} (${m.gapScore > 0 ? '+' : ''}${m.gapScore})</div>
-      </td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:13px;text-align:right;font-weight:600;color:#1a2744;">${m.impScore}%</td>
     </tr>`).join('');
 
-  // All domains with all subcats
+  // Domains + subcats (ALL subcats per domain, not just top)
   const domainSections = rankedDomains.map((d, i) => {
     const allSubcats = Object.entries(scScores || {})
       .filter(([, s]) => s.domain === d.domain)
@@ -225,6 +234,7 @@ function buildClinicianEmail(payload) {
           <div style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Clinician Flags</div>
           <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:6px;margin-bottom:24px;">
             ${flagHTML}
+            ${coupleNote}
           </table>
 
           <!-- All Meanings -->
@@ -250,6 +260,74 @@ function buildClinicianEmail(payload) {
 </html>`;
 }
 
+// ── COUPLE CODE / DYNAMODB HELPERS ─────────────────────────────────────────────
+// Table: svq-couple-submissions
+// Partition key: coupleCode (string)   Sort key: email (string)
+
+async function getExistingSubmissions(coupleCode) {
+  const result = await ddb.send(new QueryCommand({
+    TableName: COUPLE_TABLE,
+    KeyConditionExpression: "coupleCode = :cc",
+    ExpressionAttributeValues: { ":cc": coupleCode },
+  }));
+  return result.Items || [];
+}
+
+async function saveCoupleSubmission(coupleCode, payload) {
+  const { respondent, rankedMeanings, rankedDomains, topSubcats } = payload;
+  await ddb.send(new PutCommand({
+    TableName: COUPLE_TABLE,
+    Item: {
+      coupleCode,
+      email: respondent.email,
+      name: respondent.name || "",
+      submittedAt: payload.submittedAt,
+      rankedMeanings,
+      rankedDomains,
+      topSubcats,
+    },
+  }));
+}
+
+// Handles the couple-code side of a submission. Returns a status object so the
+// handler can decide what (if anything) to do next. Does NOT send any email —
+// individual results emails already sent by this point regardless of couple code.
+async function handleCoupleCode(payload) {
+  const coupleCode = payload.respondent?.coupleCode?.trim();
+  if (!coupleCode) {
+    return { coupleCode: null, status: "no_code" };
+  }
+
+  const existing = await getExistingSubmissions(coupleCode);
+  const alreadySubmitted = existing.find(item => item.email === payload.respondent.email);
+
+  if (!alreadySubmitted && existing.length >= 2) {
+    // Code already has two other people on it. Front-end should have blocked
+    // this before quiz start, but this is the backend safety net. We do NOT
+    // throw — the person's own results email has already sent successfully,
+    // this only affects the couple comparison, which will not run.
+    console.warn(`Couple code ${coupleCode} rejected: already has ${existing.length} submissions`);
+    return { coupleCode, status: "code_locked" };
+  }
+
+  await saveCoupleSubmission(coupleCode, payload);
+
+  const updated = alreadySubmitted
+    ? existing // resubmission under same email, count unchanged
+    : [...existing, { email: payload.respondent.email }];
+
+  if (updated.length >= 2) {
+    // TODO (next build step): both partners have now submitted under this code.
+    // This is where comparison logic (meanings/domains/sub-categories overlap),
+    // the AI narration call, and the two comparison emails get triggered.
+    // Not built yet — see Doc 1, Couple Code Phase, build queue items 3-6.
+    console.log(`Couple code ${coupleCode} is complete — comparison flow not yet built.`);
+    return { coupleCode, status: "ready_for_comparison" };
+  }
+
+  return { coupleCode, status: "waiting_for_partner" };
+}
+
 // ── HANDLER ───────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -273,7 +351,7 @@ export default async function handler(req, res) {
       timeStyle: 'short',
     });
 
-    // Send client email
+    // Send client email — always sends, regardless of couple code
     await ses.send(new SendEmailCommand({
       Source: FROM_EMAIL,
       Destination: { ToAddresses: [respondent.email] },
@@ -283,7 +361,7 @@ export default async function handler(req, res) {
       },
     }));
 
-    // Send clinician email
+    // Send clinician email — always sends, regardless of couple code
     await ses.send(new SendEmailCommand({
       Source: FROM_EMAIL,
       Destination: { ToAddresses: [CLINICIAN_EMAIL] },
@@ -293,7 +371,20 @@ export default async function handler(req, res) {
       },
     }));
 
-    return res.status(200).json({ ok: true });
+    // Couple code handling — never blocks or affects the emails above.
+    // If this fails for any reason, the person's own results still went
+    // through; we log the error but do not fail the request.
+    let coupleStatus = { status: "no_code" };
+    if (respondent.coupleCode) {
+      try {
+        coupleStatus = await handleCoupleCode(payload);
+      } catch (coupleErr) {
+        console.error('Couple code handling error (individual emails already sent):', coupleErr);
+        coupleStatus = { status: "error", detail: coupleErr.message };
+      }
+    }
+
+    return res.status(200).json({ ok: true, couple: coupleStatus });
 
   } catch (err) {
     console.error('SVQ submit error:', err);
