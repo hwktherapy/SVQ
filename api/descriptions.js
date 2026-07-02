@@ -1,0 +1,62 @@
+// SVQ DESCRIPTION REFERENCE — backend lookup source for couple comparison narration.
+// Mirrors SVQ_DescriptionReference_2026-07-01_1245.md exactly. If Results Copy doc
+// is ever revised, this file must be regenerated to match. Verbatim from
+// SVQ_ResultsCopy_2026-06-09_1800.md — do not paraphrase when updating.
+
+export const MEANING_FULL = {
+  "Safety": "For people who score highest here, sex is most meaningful when it happens within a felt sense of security. The body and mind have their own way of knowing whether conditions are safe enough to open up. For some people that internal read is the thing everything else depends on. When safety is present, desire has room to move. Knowing where things stand, feeling held rather than evaluated, trusting that the space is steady. These are the conditions that make sex feel worth having. That need for security shows up across your results. It shapes what you look for in connection, how desire gets activated, what feels honest and right, and how at home you feel in your own body during sex.",
+  "Love and Intimacy": "For people who score highest here, sex is most meaningful as an expression of closeness and connection. It is one of the most widely shared sexual values across research and across cultures, and for good reason. Sex that deepens a bond, that makes two people feel more known to each other, that carries the weight of genuine feeling. That is what makes it worth having. For these people, the quality of the relationship is inseparable from the quality of the sexual experience.",
+  "Physical Pleasure": "For people who score highest here, sex is most meaningful as a physical experience. Sensation, pleasure, and the body's capacity for enjoyment are not incidental to sex. They are the point. Research consistently shows physical pleasure as one of the most highly endorsed reasons people have sex, and for these people it is the primary one. What the body feels, how fully it is engaged, how much genuine physical satisfaction is present. These are the measures by which sex feels worthwhile.",
+  "Stress Relief": "For people who score highest here, sex is most meaningful as a way to release tension and return to equilibrium. The body knows how to use sexual experience as a regulatory tool, and for these people that function is central. Sex that leaves them feeling calmer, lighter, more settled in themselves. That is what makes it worth having. This meaning reflects something real about how the nervous system works and how some people are wired to find relief. It is a legitimate and well-documented reason to want sex, and for these people it may be the most honest one.",
+  "Fun and Playfulness": "For people who score highest here, sex is most meaningful when it is light, playful, and genuinely enjoyable. Fun reflects something important about how play functions in human connection and in the body. Play is one of the ways people stay present, stay curious, and stay close to each other. For these people, sex that feels easy and alive, that has room for laughter and spontaneity, carries its own kind of depth. That orientation toward lightness shapes how they engage, what they look for, and what makes sex feel like something they actually want.",
+  "Spiritual or Transcendent": "For people who score highest here, sex is most meaningful when it connects them to something larger than the physical experience. This is one of the oldest and most persistent ways humans have understood sexuality, present across cultures and traditions and documented in contemporary research as well. Sex that feels sacred, that produces a sense of union or expansion, that reaches beyond the ordinary. For these people that quality of transcendence is what gives sex its deepest meaning. It shapes what they bring to sexual experience and what they are looking for when they show up for it.",
+  "Self-Expression": "For people who score highest here, sex is most meaningful as an act of self-expression. It is one of the ways they know and communicate who they are. Sex that allows them to show up fully, to bring their actual desires and identity into the experience, carries a distinct kind of meaning. Research points to expression as a genuine and separate motivation for sex, and for these people it may be the most clarifying one. When sex reflects who they are, it feels right and worth having.",
+  "Reproduction": "For people who score highest here, sex is most meaningful in its connection to creating life and growing a family. This is one of the most fundamental human motivations, present across every culture and documented consistently in research. For these people the reproductive dimension of sex carries genuine emotional and psychological weight. It gives sex a sense of purpose that goes beyond the moment and connects it to something larger in their lives.",
+};
+
+export const DOMAIN_DESC = {
+  "Connection": "Connection measures how much emotional closeness, presence, and safety matter as conditions for sex to feel right. For people who score high here, the relational environment is not separate from the sexual experience. It is part of it. Who they are with, how safe they feel, how present and attuned that person is. These things shape whether sex feels meaningful or hollow, connected or distant.",
+  "Desire and Expression": "Desire and Expression measures what activates sexual desire and how someone prefers to experience it. This includes whether desire is sparked by feeling wanted, by novelty and exploration, by the rhythm and frequency of sexual connection, or by whether sex happens spontaneously or with intention. People who score high here have a clear sense of the conditions that bring desire to life for them.",
+  "Ethics and Communication": "Ethics and Communication measures the values someone holds around honesty, openness, and mutual respect in sexual relationships. For people who score high here, how sex is negotiated, discussed, and agreed upon matters as much as the experience itself. The relational agreements around sex, the willingness to be vulnerable, and the expectation of honesty are not separate from sexual satisfaction. They are part of what makes it possible.",
+  "Identity and Embodiment": "Identity and Embodiment measures how someone relates to their own sexuality and body in sexual contexts. This includes self-knowledge, comfort in one's body, the freedom to express an authentic sexual self, a sense of ownership over sexual choices, and privacy around sexuality. For people who score high here, the relationship with oneself is the foundation everything else is built on.",
+};
+
+export const SUBCAT_DESC = {
+  "Emotional Intimacy": "Emotional intimacy captures the need for closeness and emotional connection with a partner as a condition for sex to feel meaningful. For people who score high here, that bond is a central part of what makes sex feel significant.",
+  "Presence and Attunement": "Presence and Attunement captures the need for a partner's genuine focus and emotional availability during sex. For people who score high here, feeling truly met and attended to is part of what makes sex feel real.",
+  "Feeling Safe": "Feeling Safe captures the need for predictability, emotional security, and knowing where things stand as conditions for sex to feel right. For people who score high here, that sense of groundedness is what allows them to fully show up.",
+  "Desirability": "Desirability captures the need to feel wanted and sought after as a condition for sex to feel alive and meaningful. For people who score high here, that sense of being desired is part of what makes sex worth having.",
+  "Spontaneity": "Spontaneity captures the need for unplanned, in-the-moment sex as a condition for desire to feel genuine. For people who score high here, that quality of surprise is part of what gives sex its energy.",
+  "Deliberateness": "Deliberateness captures the need for planned, intentional sex as a condition for desire to feel meaningful. For people who score high here, anticipation and preparation are part of what makes sex worth having.",
+  "Exploration and Novelty": "Exploration and Novelty captures the need for new experiences and variety as a condition for sex to feel rich and engaging. For people who score high here, curiosity and discovery are part of what keeps sex meaningful.",
+  "Frequency": "Frequency captures the need for regular sexual connection as a condition for feeling satisfied and in touch with one's own sexuality. For people who score high here, how often sex happens is part of what makes it feel sustaining.",
+  "Honesty": "Honesty captures the need for full transparency about desires and experiences as a condition for sex to feel right. For people who score high here, that truthfulness is what makes sexual connection trustworthy and real.",
+  "Communication": "Communication captures the need to talk openly about sex as a condition for sexual satisfaction. For people who score high here, direct conversation before, during, or after sex is part of what makes the experience feel complete.",
+  "Vulnerability and Openness": "Vulnerability and Openness captures the need to be emotionally exposed and fully seen during sex as a condition for it to feel meaningful. For people who score high here, that willingness to be known is part of what makes sex feel real and worthwhile.",
+  "Exclusivity": "Exclusivity captures the need for sexual exclusivity as a clear and agreed-upon condition for sex to feel right. For people who score high here, that boundary is part of what makes the sexual relationship feel safe and trustworthy.",
+  "Commitment": "Commitment captures the need for a sense of lasting dedication as a condition for sex to feel meaningful. For people who score high here, that sense of investment is part of what gives sex its weight.",
+  "Autonomy": "Autonomy captures the need to feel full ownership over one's own sexual choices as a condition for sex to feel right. For people who score high here, that sense of agency is what makes sexual experience feel genuine and self-directed.",
+  "Self-Knowledge": "Self-Knowledge captures the need to understand one's own desires and stay curious about how they change as a condition for sex to feel authentic. For people who score high here, that self-awareness is part of what makes sexual experience feel grounded and true.",
+  "Body Acceptance": "Body Acceptance captures the need to feel comfortable and at home in one's body as a condition for sex to feel fully present and enjoyable. For people who score high here, that physical ease is part of what makes genuine engagement possible.",
+  "Sexual Self-Expression": "Sexual Self-Expression captures the need to feel free to express one's authentic sexual self during sex as a condition for it to feel meaningful. For people who score high here, that freedom within the experience itself is what makes sex feel fully inhabited.",
+  "Privacy": "Privacy captures the need to keep one's sexuality personal and protected as a condition for sex to feel right. For people who score high here, that boundary around what is shared and with whom is part of what makes sexual experience feel safe and their own.",
+};
+
+// Clinically distinct-construct pairs — if both members of a pair appear together
+// as overlaps, the narration must not treat them as redundant. Passed to the AI
+// as a plain-language flag alongside the facts when relevant.
+export const DISTINCTION_PAIRS = [
+  {
+    items: ["Feeling Safe", "Exclusivity"],
+    note: "Feeling Safe (security around attraction) and Exclusivity (the exclusivity boundary itself) are related but clinically distinct. Do not narrate as redundant.",
+  },
+  {
+    items: ["Self-Expression", "Sexual Self-Expression"],
+    note: "Self-Expression (the meaning, whether sex is fundamentally about expressing who someone is) and Sexual Self-Expression (the sub-category, whether someone feels free to express their sexual self during sex) are related but clinically distinct. Do not narrate as redundant.",
+  },
+];
+
+// Doc 4 clinician flag — safe to mention gently in couple-facing narration since it's
+// a normalizing observation, not a risk flag. Not a distinct-construct warning.
+export const SPONTANEITY_DELIBERATENESS_NOTE =
+  "Spontaneity and Deliberateness both appearing as shared sub-categories reflects two people who each value both responsive and planned desire styles. Narrate as a normal, interesting pattern, not a contradiction.";
