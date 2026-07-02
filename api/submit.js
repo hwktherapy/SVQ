@@ -1,6 +1,6 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { MEANING_FULL, DOMAIN_DESC, SUBCAT_DESC, DISTINCTION_PAIRS, SPONTANEITY_DELIBERATENESS_NOTE } from "./descriptions.js";
 
 const ses = new SESClient({
@@ -706,14 +706,19 @@ async function sendComparisonEmails(partnerA, partnerB, comparison, narration) {
 // were already deleted" edge case in Doc 1 item 38, needed because row
 // deletion (build queue item 3) isn't built yet. Stays useful as a safety
 // check even after deletion exists.
-async function markComparisonSent(coupleCode, email) {
-  await ddb.send(new UpdateCommand({
+//
+// Uses PutCommand (full item overwrite) rather than UpdateCommand, because
+// the IAM policy `svq-couple-table-access` only grants PutItem, GetItem,
+// Query, DeleteItem (Doc 1 item 25) — not UpdateItem. Takes the full record
+// already in hand (from getExistingSubmissions) rather than just coupleCode
+// + email, since a full overwrite needs the whole item, not a partial key.
+async function markComparisonSent(record) {
+  await ddb.send(new PutCommand({
     TableName: COUPLE_TABLE,
-    Key: { coupleCode, email },
-    UpdateExpression: "SET comparisonSent = :true",
-    ExpressionAttributeValues: { ":true": true },
+    Item: { ...record, comparisonSent: true },
   }));
 }
+
 
 // ── FAILURE-ALERT EMAIL (added 2026-07-02, Doc 1 item 38) ───────────────────
 // Sent to Hannah only, when narration or the comparison email send fails.
@@ -802,8 +807,8 @@ async function handleCoupleCode(payload) {
       let comparisonEmailStatus = "not_attempted";
       try {
         await sendComparisonEmails(partnerA, partnerB, comparison, narration);
-        await markComparisonSent(coupleCode, partnerA.email);
-        await markComparisonSent(coupleCode, partnerB.email);
+        await markComparisonSent(partnerA);
+        await markComparisonSent(partnerB);
         comparisonEmailStatus = "sent";
         console.log(`Couple code ${coupleCode} comparison emails sent to both partners.`);
         // Row deletion after a successful send is the next build step

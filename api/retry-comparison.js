@@ -70,8 +70,8 @@ export default async function handler(req, res) {
     }
 
     await sendComparisonEmails(partnerA, partnerB, comparison, narration);
-    await markComparisonSent(coupleCode, partnerA.email);
-    await markComparisonSent(coupleCode, partnerB.email);
+    await markComparisonSent(partnerA);
+    await markComparisonSent(partnerB);
 
     res.setHeader('Content-Type', 'text/html');
     return res.status(200).send(page(
