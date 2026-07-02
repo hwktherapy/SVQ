@@ -48,6 +48,11 @@ function buildClientEmail(payload) {
         <div style="font-weight:600;color:#1a2744;font-size:15px;">Sex as ${m.meaning}</div>
         <div style="font-size:13px;color:#555;margin-top:2px;">${m.impScore}% agreement</div>
         <div style="font-size:13px;color:#777;margin-top:4px;line-height:1.5;">${m.shortDescription || ''}</div>
+        <div style="display:inline-block;margin-top:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;
+          background:${m.gapScore >= 2 ? '#fff3e0' : '#e8f5e9'};
+          color:${m.gapScore >= 2 ? '#b8882a' : '#2e7d32'};">
+          ${gapText(m.gapScore)}
+        </div>
       </td>
     </tr>`).join('');
 
