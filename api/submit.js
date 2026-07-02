@@ -528,6 +528,24 @@ function conversationStarterBlock(text) {
     </div>`;
 }
 
+// Deterministically bolds the specific meaning/domain/sub-category names
+// inside narration text. The AI never decides what's bolded — this runs
+// against the same comparison facts already used to generate the narration
+// prompt, so bolding can never drift from what's actually shared.
+function boldTerms(text, terms) {
+  if (!text || !terms || !terms.length) return text;
+  // Longest names first, so "Honesty and Commitment" (if it ever existed as
+  // a single name) wouldn't get partially matched by a shorter substring.
+  const sorted = [...terms].sort((a, b) => b.length - a.length);
+  let result = text;
+  sorted.forEach(term => {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(`\\b${escaped}\\b`, 'g');
+    result = result.replace(pattern, `<strong>${term}</strong>`);
+  });
+  return result;
+}
+
 function buildComparisonEmail(viewerName, heading, comparison, narration) {
   const introHTML = `
     <p style="font-size:14px;color:#555;line-height:1.65;margin:0 0 14px;">
@@ -555,39 +573,47 @@ function buildComparisonEmail(viewerName, heading, comparison, narration) {
     const sections = [];
 
     if (narration.meaningsNarration) {
+      const meaningNames = comparison.sharedMeanings.map(m => m.meaning);
       sections.push(`
         <tr><td style="padding:24px 36px 0;">
           <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Where your meanings overlap</div>
           <div style="background:#f9f9f9;border-radius:10px;padding:24px;">
-            <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${narration.meaningsNarration}</p>
-            ${conversationStarterBlock(narration.meaningsStarter)}
+            <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${boldTerms(narration.meaningsNarration, meaningNames)}</p>
+            ${conversationStarterBlock(boldTerms(narration.meaningsStarter, meaningNames))}
           </div>
         </td></tr>`);
     }
 
     if (narration.domainsNarration) {
+      const domainNames = comparison.sharedDomains.map(d => d.domain);
       sections.push(`
         <tr><td style="padding:24px 36px 0;">
           <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Where your domains overlap</div>
           <div style="background:#f9f9f9;border-radius:10px;padding:24px;">
-            <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${narration.domainsNarration}</p>
+            <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${boldTerms(narration.domainsNarration, domainNames)}</p>
           </div>
         </td></tr>`);
     }
 
     if (narration.subcatsNarration) {
-      const subcatBlocks = Object.entries(narration.subcatsNarration).map(([domain, text]) => `
+      const allSubcatNames = Object.values(comparison.sharedSubcatsByDomain || {})
+        .flat().map(s => s.subcat);
+
+      const subcatBlocks = Object.entries(narration.subcatsNarration).map(([domain, text]) => {
+        const namesForDomain = (comparison.sharedSubcatsByDomain[domain] || []).map(s => s.subcat);
+        return `
         <div style="margin-bottom:16px;">
           <div style="font-size:15px;font-weight:700;color:#1a2744;font-family:Georgia,serif;margin-bottom:6px;">${domain}</div>
-          <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${text}</p>
-        </div>`).join('');
+          <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${boldTerms(text, namesForDomain)}</p>
+        </div>`;
+      }).join('');
 
       sections.push(`
         <tr><td style="padding:24px 36px 0;">
           <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Where your specific values overlap</div>
           <div style="background:#f9f9f9;border-radius:10px;padding:24px;">
             ${subcatBlocks}
-            ${conversationStarterBlock(narration.subcatsStarter)}
+            ${conversationStarterBlock(boldTerms(narration.subcatsStarter, allSubcatNames))}
           </div>
         </td></tr>`);
     }
