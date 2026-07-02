@@ -502,6 +502,170 @@ function computeComparison(partnerA, partnerB) {
 // Handles the couple-code side of a submission. Returns a status object so the
 // handler can decide what (if anything) to do next. Does NOT send any email —
 // individual results emails already sent by this point regardless of couple code.
+// ── COMPARISON EMAIL HTML (added 2026-07-02) ────────────────────────────────
+// Recipient/heading logic and intro copy locked 2026-07-01 — see Doc 1,
+// Couple Code Phase section. Visual style matches buildClientEmail's palette
+// (navy #1a2744 / gold #d4aa70 / Georgia serif headers) for consistency.
+
+function isAnonymousName(name) {
+  return !name || name === "Anonymous";
+}
+
+function buildCoupleHeading(nameA, nameB) {
+  if (isAnonymousName(nameA) || isAnonymousName(nameB)) {
+    return "Couple's Shared Results";
+  }
+  const firstA = nameA.trim().split(/\s+/)[0];
+  const firstB = nameB.trim().split(/\s+/)[0];
+  return `${firstA} & ${firstB}'s Shared Results`;
+}
+
+function conversationStarterBlock(text) {
+  if (!text) return '';
+  return `
+    <div style="margin-top:14px;padding:16px 18px;background:#fff8ec;border-left:3px solid #d4aa70;border-radius:6px;">
+      <div style="font-size:14px;color:#1a2744;line-height:1.6;font-weight:600;">${text}</div>
+    </div>`;
+}
+
+function buildComparisonEmail(viewerName, heading, comparison, narration) {
+  const introHTML = `
+    <p style="font-size:14px;color:#555;line-height:1.65;margin:0 0 14px;">
+      This report shows where you and your partner's sexual values naturally overlap. It looks at what sex means to each of you, what you both prioritize, and where your specific needs align. Overlap here is a starting point, not a scorecard. It points to ground you already share and can build from together.
+    </p>
+    <p style="font-size:14px;color:#555;line-height:1.65;margin:0;">
+      This report is not a full comparison of every answer, and it is not a measure of compatibility. Differences are expected and are not a problem to solve. Two people can have very different sexual values and still build a strong, honest, and joyful sexual relationship together. Where your values diverge, that is often exactly the kind of thing worth talking through, ideally with support, so it becomes a place of understanding rather than distance.
+    </p>`;
+
+  let bodyHTML;
+
+  if (!comparison.hasAnyOverlap) {
+    bodyHTML = `
+      <tr><td style="padding:24px 36px 0;">
+        <div style="background:#f9f9f9;border-radius:10px;padding:24px;">
+          <p style="font-size:14px;color:#444;line-height:1.65;margin:0 0 14px;">
+            Your results and your partner's didn't show overlap in the same top meanings, domains, or sub-categories this time. That's common, especially for two people who relate to sex differently, and it isn't a verdict on how well you fit together. Values shift as life changes too, so this reflects where things stand right now, not something fixed.
+          </p>
+          <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">
+            This is often the point where outside support helps most. A session gives you space to slow down and get clear on what each of you actually values, then talk through how those differences show up in everyday life.
+          </p>
+        </div>
+      </td></tr>`;
+  } else {
+    const sections = [];
+
+    if (narration.meaningsNarration) {
+      sections.push(`
+        <tr><td style="padding:24px 36px 0;">
+          <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Where your meanings overlap</div>
+          <div style="background:#f9f9f9;border-radius:10px;padding:24px;">
+            <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${narration.meaningsNarration}</p>
+            ${conversationStarterBlock(narration.meaningsStarter)}
+          </div>
+        </td></tr>`);
+    }
+
+    if (narration.domainsNarration) {
+      sections.push(`
+        <tr><td style="padding:24px 36px 0;">
+          <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Where your domains overlap</div>
+          <div style="background:#f9f9f9;border-radius:10px;padding:24px;">
+            <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${narration.domainsNarration}</p>
+          </div>
+        </td></tr>`);
+    }
+
+    if (narration.subcatsNarration) {
+      const subcatBlocks = Object.entries(narration.subcatsNarration).map(([domain, text]) => `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:15px;font-weight:700;color:#1a2744;font-family:Georgia,serif;margin-bottom:6px;">${domain}</div>
+          <p style="font-size:14px;color:#444;line-height:1.65;margin:0;">${text}</p>
+        </div>`).join('');
+
+      sections.push(`
+        <tr><td style="padding:24px 36px 0;">
+          <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Where your specific values overlap</div>
+          <div style="background:#f9f9f9;border-radius:10px;padding:24px;">
+            ${subcatBlocks}
+            ${conversationStarterBlock(narration.subcatsStarter)}
+          </div>
+        </td></tr>`);
+    }
+
+    bodyHTML = sections.join('');
+  }
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>${heading}</title></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;">
+
+        <!-- Header -->
+        <tr><td style="background:#1a2744;padding:32px 36px;">
+          <div style="font-size:11px;font-weight:600;color:#d4aa70;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Sexual Values Quiz</div>
+          <div style="font-size:26px;font-weight:700;color:#ffffff;font-family:Georgia,serif;">${heading}</div>
+        </td></tr>
+
+        <!-- Greeting + Intro -->
+        <tr><td style="padding:28px 36px 0;">
+          <p style="font-size:15px;color:#1a2744;font-weight:600;margin:0 0 14px;">Hi ${isAnonymousName(viewerName) ? 'there' : viewerName.trim().split(/\s+/)[0]},</p>
+          ${introHTML}
+        </td></tr>
+
+        ${bodyHTML}
+
+        <!-- Booking CTA -->
+        <tr><td style="padding:24px 36px 0;">
+          <div style="text-align:center;padding:24px;background:#f9f9f9;border-radius:10px;">
+            <p style="font-size:15px;color:#1a2744;font-weight:600;margin:0 0 16px;">Ready to talk through this together?</p>
+            <a href="https://hannah-wood-kraft.clientsecure.me/" style="display:inline-block;padding:14px 28px;background:#d4aa70;color:#ffffff;font-weight:600;font-size:15px;text-decoration:none;border-radius:6px;">Book a session to talk</a>
+          </div>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding:24px 36px 32px;border-top:1px solid #eee;margin-top:24px;">
+          <p style="font-size:12px;color:#999;line-height:1.6;margin:0;">
+            This report was generated from two separately completed assessments as part of your work with your therapist. Results are confidential and have also been shared with your clinician.
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+async function sendComparisonEmails(partnerA, partnerB, comparison, narration) {
+  const heading = buildCoupleHeading(partnerA.name, partnerB.name);
+  const emailA = buildComparisonEmail(partnerA.name, heading, comparison, narration);
+  const emailB = buildComparisonEmail(partnerB.name, heading, comparison, narration);
+
+  // Hannah is bcc'd on one of the two sends only — content is identical
+  // shared-facts data either way, just personalized by greeting name.
+  await ses.send(new SendEmailCommand({
+    Source: FROM_EMAIL,
+    Destination: { ToAddresses: [partnerA.email], BccAddresses: [CLINICIAN_EMAIL] },
+    Message: {
+      Subject: { Data: heading, Charset: 'UTF-8' },
+      Body: { Html: { Data: emailA, Charset: 'UTF-8' } },
+    },
+  }));
+
+  await ses.send(new SendEmailCommand({
+    Source: FROM_EMAIL,
+    Destination: { ToAddresses: [partnerB.email] },
+    Message: {
+      Subject: { Data: heading, Charset: 'UTF-8' },
+      Body: { Html: { Data: emailB, Charset: 'UTF-8' } },
+    },
+  }));
+}
+
 async function handleCoupleCode(payload) {
   const coupleCode = payload.respondent?.coupleCode?.trim();
   if (!coupleCode) {
@@ -543,11 +707,28 @@ async function handleCoupleCode(payload) {
         if (narration) {
           console.log(`Couple code ${coupleCode} narration generated:`, JSON.stringify(narration));
         } else {
-          console.error(`Couple code ${coupleCode} narration failed — comparison email not yet built, so no fallback needed here yet, but will be once that step exists`);
+          // Narration failed (API error, timeout, bad parse, etc). The
+          // comparison email cannot send without it. This is exactly the
+          // case the failure-alert + retry mechanism (Doc 1 item 38) is
+          // designed to catch — not built yet, so for now we log and stop.
+          console.error(`Couple code ${coupleCode} narration failed — comparison email not sent. Failure-alert/retry not yet built (Doc 1 item 38).`);
+          return { coupleCode, status: "ready_for_comparison", comparison, narration: null, comparisonEmailStatus: "narration_failed" };
         }
       }
 
-      return { coupleCode, status: "ready_for_comparison", comparison, narration };
+      let comparisonEmailStatus = "not_attempted";
+      try {
+        await sendComparisonEmails(partnerA, partnerB, comparison, narration);
+        comparisonEmailStatus = "sent";
+        console.log(`Couple code ${coupleCode} comparison emails sent to both partners.`);
+        // Row deletion after a successful send is the next build step
+        // (Doc 1 build queue item 3) — intentionally not implemented yet.
+      } catch (emailErr) {
+        console.error(`Couple code ${coupleCode} comparison email send failed:`, emailErr);
+        comparisonEmailStatus = "send_failed";
+      }
+
+      return { coupleCode, status: "ready_for_comparison", comparison, narration, comparisonEmailStatus };
     }
     return { coupleCode, status: "ready_for_comparison" };
   }
