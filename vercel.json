@@ -6,6 +6,9 @@
     },
     "api/couple-check.js": {
       "maxDuration": 10
+    },
+    "api/retry-comparison.js": {
+      "maxDuration": 30
     }
   }
 }
