@@ -33,7 +33,6 @@ body {
   position: relative;
 }
 
-/* ── ANIMATED GRADIENT BACKGROUND ── */
 .bg-canvas {
   position: fixed;
   inset: 0;
@@ -107,7 +106,6 @@ body {
   100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 
-/* ── LAYOUT ── */
 .app {
   position: relative;
   z-index: 1;
@@ -129,7 +127,6 @@ body {
   width: 100%;
 }
 
-/* ── HEADER ── */
 .page-header { margin-bottom: 2rem; }
 
 .eyebrow {
@@ -156,7 +153,6 @@ body {
   font-style: italic;
 }
 
-/* ── PROGRESS ── */
 .progress-track {
   height: 2px;
   background: rgba(255,255,255,0.12);
@@ -171,7 +167,6 @@ body {
   transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
 }
 
-/* ── CARDS ── */
 .card {
   background: #ffffff;
   border-radius: 20px;
@@ -198,7 +193,6 @@ body {
 }
 .card p:last-child { margin-bottom: 0; }
 
-/* ── PRINCIPLES LIST ── */
 .principles-list { list-style: none; margin: 0.75rem 0 1rem; }
 .principles-list li {
   font-size: 18px;
@@ -217,7 +211,6 @@ body {
 }
 .principle-highlight { font-weight: 600; color: var(--navy); }
 
-/* ── BTN STRIP ── */
 .btn-strip {
   max-width: 820px;
   margin: 0 auto;
@@ -262,7 +255,6 @@ body {
 .btn-back { flex: 1; }
 .btn-next { flex: 2; }
 
-/* ── FORM FIELDS ── */
 .field { margin-bottom: 1.25rem; }
 .field:last-child { margin-bottom: 0; }
 .field label {
@@ -311,7 +303,6 @@ body {
 .required { color: #c0392b; }
 .field-divider { border: none; border-top: 1px solid #f0f0f0; margin: 1.25rem 0; }
 
-/* ── STATEMENT ── */
 .statement {
   font-family: 'Libre Baskerville', serif;
   font-size: 21px;
@@ -321,7 +312,6 @@ body {
   margin-bottom: 2rem;
 }
 
-/* ── SLIDER ── */
 .slider-block { margin-bottom: 1.75rem; }
 .slider-block:last-child { margin-bottom: 0; }
 
@@ -346,7 +336,6 @@ input[type="range"] {
   outline: none;
   cursor: pointer;
 }
-/* Unset state — gray thumb, no ring */
 input[type="range"].unset::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 24px; height: 24px;
@@ -365,7 +354,6 @@ input[type="range"].unset::-moz-range-thumb {
   border: 3px solid #fff;
   box-shadow: 0 0 0 2px #cccccc;
 }
-/* Set state — gold thumb */
 input[type="range"]:not(.unset)::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 24px; height: 24px;
@@ -386,7 +374,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
   box-shadow: 0 0 0 2px var(--gold);
 }
 
-/* Disabled Next button */
 .btn-next:disabled {
   opacity: 0.35;
   cursor: not-allowed;
@@ -417,7 +404,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 }
 .scale-label.right { text-align: right; }
 
-/* ── CHOICE BUTTONS ── */
 .choice-row { display: flex; gap: 0.75rem; margin-top: 0.25rem; }
 .choice-btn {
   flex: 1;
@@ -473,7 +459,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 .skip-btn:hover { border-color: #bbb; color: #888; }
 .skip-btn.selected { border-color: var(--navy); color: var(--navy); background: rgba(26,39,68,0.06); }
 
-/* ── CARD TRANSITION ── */
 .card-wrapper {
   position: relative;
   overflow: hidden;
@@ -503,7 +488,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 .enter-right { animation: enterRight 0.32s cubic-bezier(0.22,1,0.36,1) both; }
 .enter-left  { animation: enterLeft  0.32s cubic-bezier(0.22,1,0.36,1) both; }
 
-/* ── RESULTS ── */
 .results-page {
   flex: 1;
   padding: 2.5rem 1.5rem 4rem;
@@ -568,7 +552,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
   display: block;
 }
 
-/* meaning card */
 .top-meaning-card {
   background: var(--navy-deep);
   border: 1px solid rgba(201,169,110,0.25);
@@ -611,7 +594,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 .meaning-pct-label { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.5; }
 .meaning-description { font-size: 16px; line-height: 1.8; color: rgba(255,255,255,0.82); }
 
-/* all meanings list */
 .meanings-list-card {
   background: #ffffff;
   border-radius: 20px;
@@ -647,7 +629,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 .ml-name { font-size: 16px; font-weight: 600; color: #111111; margin-bottom: 0.25rem; }
 .ml-desc { font-size: 14px; color: #666666; line-height: 1.6; }
 
-/* domain card */
 .domain-card {
   background: #ffffff;
   border-radius: 20px;
@@ -741,7 +722,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 }
 .btn-results-secondary:hover { background: rgba(255,255,255,0.08); }
 
-/* ── INTRO BLUR-TO-FOCUS ── */
 @keyframes blurFocus {
   from { opacity: 0; filter: blur(10px); }
   to   { opacity: 1; filter: blur(0px); }
@@ -764,7 +744,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 
 <div class="app">
 
-<!-- ── INTRO ── -->
 <div class="screen active" id="screen-intro">
   <div class="page">
     <div class="page-header intro-item">
@@ -810,7 +789,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
   </div>
 </div>
 
-<!-- ── EMAIL ── -->
 <div class="screen" id="screen-email">
   <div class="page">
     <div class="page-header intro-item">
@@ -850,7 +828,6 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
   </div>
 </div>
 
-<!-- ── QUESTION ── -->
 <div class="screen" id="screen-question">
   <div class="page">
     <div class="page-header">
@@ -871,12 +848,11 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
   </div>
 </div>
 
-<!-- ── RESULTS ── -->
 <div class="screen" id="screen-results">
   <div class="results-page intro-item" id="results-content"></div>
 </div>
 
-</div><!-- .app -->
+</div>
 
 <script>
 const DUAL = 'dual', SCENARIO = 'scenario', PAIRING = 'pairing';
@@ -1037,7 +1013,6 @@ function sliderHTML(id, label, left, right, val, isSet) {
   </div>`;
 }
 
-// Track which sliders on the current card have been interacted with
 let cardInteracted = {};
 
 function updateNextButton() {
@@ -1086,7 +1061,6 @@ function renderQuestion(index, direction) {
   const q = QUESTIONS[index];
   const saved = responses[q.id];
 
-  // If returning to an answered question, all interactions already done
   cardInteracted = {};
   if (saved) {
     if (q.type === DUAL) { cardInteracted['imp'] = true; cardInteracted['rea'] = true; }
@@ -1322,7 +1296,7 @@ function renderResults(){
     <div class="top-meaning-card">
       <div class="meaning-eyebrow">Top meaning</div>
       <div class="meaning-name">Sex as ${top.meaning}</div>
-      <div class="meaning-score-row" style="display:none;"></div>
+      <div class="meaning-score-row">${gapTag(top.gapScore)}</div>
       <div class="meaning-description">${MEANING_FULL[top.meaning]}</div>
     </div>
 
@@ -1367,12 +1341,10 @@ function renderResults(){
 let introObserver = null;
 
 function animateIntro(fast){
-  // Clean up any existing observer
   if(introObserver){ introObserver.disconnect(); introObserver=null; }
 
   const items = Array.from(document.querySelectorAll('#screen-intro .intro-item'));
 
-  // Reset all to invisible
   items.forEach(el=>{
     el.classList.remove('blur-in');
     el.style.opacity='0';
@@ -1381,16 +1353,13 @@ function animateIntro(fast){
   void document.getElementById('screen-intro').offsetWidth;
 
   if(fast){
-    // Take the quiz again — everything blurs in together fast
     items.forEach((el,i)=>{
       el.style.animationDelay=`${i*120}ms`;
       el.classList.add('blur-in');
     });
   } else {
-    // First load — header and first card together immediately
     items.slice(0,2).forEach(el=>el.classList.add('blur-in'));
 
-    // Remaining items triggered by scroll
     introObserver = new IntersectionObserver((entries)=>{
       entries.forEach(entry=>{
         if(entry.isIntersecting){
@@ -1427,7 +1396,6 @@ function animateEmail(){
   });
 }
 
-// Run on first load
 animateIntro(false);
 
 document.getElementById('begin-btn').addEventListener('click',()=>{
@@ -1442,7 +1410,6 @@ anonCheck.addEventListener('change',function(){
   else{nameInput.disabled=false;nameInput.placeholder='First & last name';}
 });
 
-// Email validation — Continue button disabled until a valid email is entered
 const emailInput=document.getElementById('email');
 const emailNextBtn=document.getElementById('email-next');
 emailNextBtn.disabled=true;
@@ -1455,7 +1422,6 @@ function updateEmailNextBtn(){
 }
 emailInput.addEventListener('input',updateEmailNextBtn);
 
-// Couple code validation — checked on blur, before the quiz starts
 const coupleCodeInput=document.getElementById('couple-code');
 const coupleCodeStatus=document.getElementById('couple-code-status');
 let coupleCodeLocked=false;
@@ -1494,9 +1460,6 @@ coupleCodeInput.addEventListener('blur',async function(){
       setCoupleCodeStatus('','');
     }
   }catch(err){
-    // If the check itself fails, don't block the person — fail open.
-    // The backend safety net in submit.js still protects against a
-    // third submission on a locked code.
     coupleCodeLocked=false;
     setCoupleCodeStatus('','');
   }
@@ -1527,11 +1490,9 @@ document.getElementById('q-next').addEventListener('click',()=>{
   else{renderResults();submitResults();showScreen('screen-results');animateResults();}
 });
 function resetQuiz(){
-  // Clear all responses and state
   Object.keys(responses).forEach(k=>delete responses[k]);
   currentQ=0;
   cardInteracted={};
-  // Clear form fields
   document.getElementById('email').value='';
   document.getElementById('name').value='';
   document.getElementById('couple-code').value='';
@@ -1541,7 +1502,6 @@ function resetQuiz(){
   nameInput.disabled=false;
   nameInput.placeholder='First & last name';
   emailNextBtn.disabled=true;
-  // Return to intro with fast blur-in
   showScreen('screen-intro');
   animateIntro(true);
   window.scrollTo(0,0);
@@ -1551,19 +1511,16 @@ function submitResults(){
   try{
     const {rankedMeanings,rankedDomains,topSubcats,scScores}=computeResults();
 
-    // Enrich rankedMeanings with full description
     const enriched=rankedMeanings.map(m=>({...m,fullDescription:MEANING_FULL[m.meaning]||'',shortDescription:MEANING_SHORT[m.meaning]||''}));
     const enrichedDomains=rankedDomains.map(d=>({...d,description:DOMAIN_DESC[d.domain]||''}));
     const enrichedSubcats={};
     Object.entries(topSubcats).forEach(([dom,scs])=>{enrichedSubcats[dom]=scs.map(sc=>({...sc,description:SUBCAT_DESC[sc.subcat]||''}));});
 
-    // Respondent info
     const email=document.getElementById('email').value.trim();
     const nameVal=document.getElementById('name').value.trim();
     const coupleCode=document.getElementById('couple-code').value.trim()||null;
     const respondent={email,name:nameVal||'Anonymous',coupleCode};
 
-    // Clinician flags
     const exScore=scScores[SC.EX]?scScores[SC.EX].impScore:0;
     const fsScore=scScores[SC.FS]?scScores[SC.FS].impScore:0;
     const spScore=scScores[SC.SP]?scScores[SC.SP].impScore:0;
@@ -1580,12 +1537,10 @@ function submitResults(){
       spontaneityDeliberatenessBothHigh:spScore>=(5*0.7)&&deScore>=(5*0.7)
     };
 
-    // Security-around-attraction subscale (FS.4 and FS.5 average importance)
     const fs4=responses['FS.4'];const fs5=responses['FS.5'];
     const fs4v=fs4?fs4.importance:null;const fs5v=fs5?fs5.importance:null;
     const securityAroundAttraction=(fs4v!==null&&fs5v!==null)?parseFloat(((fs4v+fs5v)/2).toFixed(2)):null;
 
-    // Build description lookups for clinician email
     const subcatDescs={};
     Object.values(SC).forEach(sc=>{subcatDescs[sc]=SUBCAT_DESC[sc]||'';});
     const domainDescs={};
