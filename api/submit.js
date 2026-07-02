@@ -1,6 +1,7 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { MEANING_FULL, DOMAIN_DESC, SUBCAT_DESC, DISTINCTION_PAIRS, SPONTANEITY_DELIBERATENESS_NOTE } from "./descriptions.js";
 
 const ses = new SESClient({
   region: process.env.AWS_REGION,
@@ -22,6 +23,9 @@ const ddb = DynamoDBDocumentClient.from(ddbClient);
 const COUPLE_TABLE = "svq-couple-submissions";
 const CLINICIAN_EMAIL = process.env.CLINICIAN_EMAIL;
 const FROM_EMAIL = process.env.FROM_EMAIL;
+// NEW — required for AI narration. Must be added as a Vercel environment variable;
+// does not exist yet as of this file's creation. Get a key from console.anthropic.com.
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 // ── GAP TAG TEXT ──────────────────────────────────────────────────────────────
 function gapText(gapScore) {
@@ -289,7 +293,128 @@ async function saveCoupleSubmission(coupleCode, payload) {
   }));
 }
 
-// ── COMPARISON LOGIC (deterministic — decides WHAT overlaps, not how to say it) ─
+// ── AI NARRATION (added 2026-07-01) ─────────────────────────────────────────
+// Takes the deterministic comparison facts and turns them into warm prose.
+// Full behavior spec: SVQ_NarrationPrompt_2026-07-01_1345.md — this string
+// must be kept in sync with that file if the rules ever change.
+const NARRATION_SYSTEM_PROMPT = `You are writing narration for a couple's sexual values comparison email, on behalf of a licensed sex therapist. You do not decide what counts as overlap. You are given pre-computed facts about where two partners' quiz results overlap, along with clinical descriptions of each overlapping item and, where applicable, gap agreement status. Your only job is to turn those facts into warm, clinically grounded prose, plus conversation starters.
+
+VOICE RULES: Plain, warm, informative third person. Speak in terms of "people who..." or "for couples who share this..." — never "you" in narration paragraphs (reserve "you" for conversation starters only). No em dashes. No contrast framing ("not X, but Y"). No hedging phrases ("in some ways," "can often"). No lead-ins like "for many people." No paired opposites for rhythm. Sentences direct and declarative. Tone: a knowledgeable clinician speaking plainly, not a wellness brand. Never repeat the same verb twice in one sentence for effect.
+
+RANK LANGUAGE — CRITICAL: Never imply one partner values something more than the other. Only exception: when both partners share the exact same #1 (bothRankedFirst: true), use the clearest, most direct language ("X is the top meaning/domain for both of you"). Otherwise, state only that something is shared within the relevant top-N ("X shows up in both of your top meanings" / "X is in both of your top 2 domains"). Sub-category overlaps can say "you both lead with X."
+
+GAP AGREEMENT: When gapAgreement is "met" or "unmet" (not null), add exactly one gentle sentence reflecting that shared status, in the couple's warm register (e.g. "This is something that already feels present for both of you right now" for met, or "This may not be getting quite the space it needs for either of you right now, worth bringing into a session together" for unmet). When gapAgreement is null, say nothing about gap for that item. Domains never receive gap language.
+
+STRUCTURE: Return ONLY valid JSON, no markdown fences, no preamble, in exactly this shape:
+{
+  "meaningsNarration": "string or null if no shared meanings",
+  "meaningsStarter": "string or null",
+  "domainsNarration": "string or null if no shared domains",
+  "subcatsNarration": { "DomainName": "string" } or null if no shared sub-categories,
+  "subcatsStarter": "string or null"
+}
+Use null (not empty string) for any section with nothing to say.
+
+MEANINGS BLOCK: Use each shared meaning's FULL description as grounding material, not just its name. Apply rank language rules. Fold in gap agreement sentence where applicable. If multiple meanings shared, connect in flowing prose. End with exactly one conversation starter, randomly prefixed with one of these three phrases (pick one, never reuse elsewhere in this response): "Something to talk through together:", "One place to start:", "Bring this into a conversation:". The question must be concrete and answerable, not abstract.
+
+DOMAINS BLOCK: Use domain descriptions as grounding material. No conversation starter, ever. No gap language, ever. Apply rank language rules.
+
+SUB-CATEGORIES BLOCK: Only for domains with shared sub-categories. Use each sub-category's description as grounding material. Fold in gap agreement sentences where applicable. Weave multiple sub-cats per domain into one paragraph. End the entire block (not per-domain) with exactly one conversation starter, randomly prefixed as above and different from whichever phrase was used in the meanings block, focused on one or two of the strongest overlaps. Respect any distinction notes provided — never narrate clinically distinct constructs as redundant.
+
+STRUCTURAL NOTE: Connection domain only has 3 sub-categories vs 5 elsewhere, so it will always produce at least one shared sub-category when it's a shared domain. Do not narrate this as remarkable.
+
+NEVER: invent facts not in the input; use "you" in narration paragraphs; imply relative weight between partners except the bothRankedFirst exception; mention gap when gapAgreement is null; mention gap in the domains block; treat distinct constructs as redundant; use empty string instead of null; repeat a starter phrase twice in one response.`;
+
+function buildNarrationFacts(comparison) {
+  const sharedMeanings = comparison.sharedMeanings.map(m => ({
+    name: m.meaning,
+    bothRankedFirst: m.bothRankedFirst,
+    gapAgreement: m.gapAgreement,
+    description: MEANING_FULL[m.meaning] || "",
+  }));
+
+  const sharedDomains = comparison.sharedDomains.map(d => ({
+    name: d.domain,
+    bothRankedFirst: d.bothRankedFirst,
+    description: DOMAIN_DESC[d.domain] || "",
+  }));
+
+  const sharedSubcatsByDomain = {};
+  Object.entries(comparison.sharedSubcatsByDomain || {}).forEach(([domain, subs]) => {
+    sharedSubcatsByDomain[domain] = subs.map(s => ({
+      name: s.subcat,
+      gapAgreement: s.gapAgreement,
+      description: SUBCAT_DESC[s.subcat] || "",
+    }));
+  });
+
+  // Collect any distinction notes relevant to this specific couple's overlaps
+  const allOverlapNames = [
+    ...sharedMeanings.map(m => m.name),
+    ...Object.values(sharedSubcatsByDomain).flat().map(s => s.name),
+  ];
+  const distinctionNotes = DISTINCTION_PAIRS
+    .filter(pair => pair.items.every(item => allOverlapNames.includes(item)))
+    .map(pair => pair.note);
+
+  // Doc 4 clinician flag — safe, normalizing note if both appear together
+  const hasSpontaneity = allOverlapNames.includes("Spontaneity");
+  const hasDeliberateness = allOverlapNames.includes("Deliberateness");
+  if (hasSpontaneity && hasDeliberateness) {
+    distinctionNotes.push(SPONTANEITY_DELIBERATENESS_NOTE);
+  }
+
+  return { sharedMeanings, sharedDomains, sharedSubcatsByDomain, distinctionNotes };
+}
+
+async function getNarration(comparison) {
+  if (!ANTHROPIC_API_KEY) {
+    console.error('ANTHROPIC_API_KEY not set — cannot generate narration');
+    return null;
+  }
+
+  const facts = buildNarrationFacts(comparison);
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1500,
+      system: NARRATION_SYSTEM_PROMPT,
+      messages: [
+        { role: "user", content: JSON.stringify(facts) },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error('Anthropic API error:', response.status, errText);
+    return null;
+  }
+
+  const data = await response.json();
+  const textBlock = (data.content || []).find(b => b.type === 'text');
+  if (!textBlock) {
+    console.error('No text block in Anthropic API response');
+    return null;
+  }
+
+  try {
+    const cleaned = textBlock.text.replace(/```json|```/g, '').trim();
+    return JSON.parse(cleaned);
+  } catch (parseErr) {
+    console.error('Failed to parse narration JSON:', parseErr, textBlock.text);
+    return null;
+  }
+}
+
+
 // Rules (locked 2026-06-30, extended 2026-07-01):
 //   Meanings: top 3 each, any shared meaning counts, #1-matches-#1 is "strongest"
 //   Domains: top 2 each, rank-agnostic — shared at any rank counts, same rank is "strongest"
@@ -398,14 +523,26 @@ async function handleCoupleCode(payload) {
 
   if (updated.length >= 2) {
     // Both partners have submitted. Pull the two full records and run the
-    // deterministic comparison. AI narration and the comparison emails are
-    // not built yet — see Doc 1, Couple Code Phase, build queue items 4-6.
+    // deterministic comparison, then generate AI narration if there's overlap.
+    // Comparison email template and row deletion are the next unbuilt pieces
+    // (see Doc 1, Couple Code Phase, build queue items 2-3).
     const finalRecords = await getExistingSubmissions(coupleCode);
     if (finalRecords.length >= 2) {
       const [partnerA, partnerB] = finalRecords;
       const comparison = computeComparison(partnerA, partnerB);
       console.log(`Couple code ${coupleCode} comparison computed:`, JSON.stringify(comparison));
-      return { coupleCode, status: "ready_for_comparison", comparison };
+
+      let narration = null;
+      if (comparison.hasAnyOverlap) {
+        narration = await getNarration(comparison);
+        if (narration) {
+          console.log(`Couple code ${coupleCode} narration generated:`, JSON.stringify(narration));
+        } else {
+          console.error(`Couple code ${coupleCode} narration failed — comparison email not yet built, so no fallback needed here yet, but will be once that step exists`);
+        }
+      }
+
+      return { coupleCode, status: "ready_for_comparison", comparison, narration };
     }
     return { coupleCode, status: "ready_for_comparison" };
   }
