@@ -1,6 +1,6 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { MEANING_FULL, DOMAIN_DESC, SUBCAT_DESC, DISTINCTION_PAIRS, SPONTANEITY_DELIBERATENESS_NOTE } from "./descriptions.js";
 
 const ses = new SESClient({
@@ -26,6 +26,9 @@ const FROM_EMAIL = process.env.FROM_EMAIL;
 // NEW — required for AI narration. Must be added as a Vercel environment variable;
 // does not exist yet as of this file's creation. Get a key from console.anthropic.com.
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+// Used to build the retry link in the failure-alert email. Falls back to the
+// known production domain if the env var isn't set — no new required var.
+const SITE_URL = process.env.SITE_URL || "https://svq-nine.vercel.app";
 
 // ── GAP TAG TEXT ──────────────────────────────────────────────────────────────
 function gapText(gapScore) {
@@ -372,50 +375,55 @@ function buildNarrationFacts(comparison) {
   return { sharedMeanings, sharedDomains, sharedSubcatsByDomain, distinctionNotes };
 }
 
+// Returns { narration, error }. narration is null on any failure, error is a
+// human-readable string on any failure (null on success). Changed 2026-07-02
+// from a bare null-on-failure return so the failure-alert email (Doc 1 item
+// 38) can report the actual error text to Hannah instead of just "it failed."
 async function getNarration(comparison) {
   if (!ANTHROPIC_API_KEY) {
-    console.error('ANTHROPIC_API_KEY not set — cannot generate narration');
-    return null;
+    return { narration: null, error: "ANTHROPIC_API_KEY not set — cannot generate narration" };
   }
 
   const facts = buildNarrationFacts(comparison);
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1500,
-      system: NARRATION_SYSTEM_PROMPT,
-      messages: [
-        { role: "user", content: JSON.stringify(facts) },
-      ],
-    }),
-  });
+  let response;
+  try {
+    response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1500,
+        system: NARRATION_SYSTEM_PROMPT,
+        messages: [
+          { role: "user", content: JSON.stringify(facts) },
+        ],
+      }),
+    });
+  } catch (fetchErr) {
+    return { narration: null, error: `Narration request failed to send: ${fetchErr.message}` };
+  }
 
   if (!response.ok) {
     const errText = await response.text();
-    console.error('Anthropic API error:', response.status, errText);
-    return null;
+    return { narration: null, error: `Anthropic API error ${response.status}: ${errText}` };
   }
 
   const data = await response.json();
   const textBlock = (data.content || []).find(b => b.type === 'text');
   if (!textBlock) {
-    console.error('No text block in Anthropic API response');
-    return null;
+    return { narration: null, error: "No text block in Anthropic API response" };
   }
 
   try {
     const cleaned = textBlock.text.replace(/```json|```/g, '').trim();
-    return JSON.parse(cleaned);
+    return { narration: JSON.parse(cleaned), error: null };
   } catch (parseErr) {
-    console.error('Failed to parse narration JSON:', parseErr, textBlock.text);
-    return null;
+    return { narration: null, error: `Failed to parse narration JSON: ${parseErr.message} — raw text: ${textBlock.text.slice(0, 500)}` };
   }
 }
 
@@ -692,6 +700,57 @@ async function sendComparisonEmails(partnerA, partnerB, comparison, narration) {
   }));
 }
 
+// Marks a couple's row as having received its comparison email. This is the
+// signal the retry endpoint (api/retry-comparison.js) checks to avoid
+// re-sending after a successful send — a stand-in for the "check if rows
+// were already deleted" edge case in Doc 1 item 38, needed because row
+// deletion (build queue item 3) isn't built yet. Stays useful as a safety
+// check even after deletion exists.
+async function markComparisonSent(coupleCode, email) {
+  await ddb.send(new UpdateCommand({
+    TableName: COUPLE_TABLE,
+    Key: { coupleCode, email },
+    UpdateExpression: "SET comparisonSent = :true",
+    ExpressionAttributeValues: { ":true": true },
+  }));
+}
+
+// ── FAILURE-ALERT EMAIL (added 2026-07-02, Doc 1 item 38) ───────────────────
+// Sent to Hannah only, when narration or the comparison email send fails.
+// Plain internal-tool styling, not the client-facing palette — this email
+// is a diagnostic, not something a couple ever sees.
+function buildFailureAlertEmail(coupleCode, partnerA, partnerB, errorText) {
+  const retryUrl = `${SITE_URL}/api/retry-comparison?code=${encodeURIComponent(coupleCode)}`;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:24px;background:#f4f4f4;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:10px;padding:28px;border:1px solid #eee;">
+    <div style="font-size:11px;font-weight:600;color:#c0392b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">SVQ — Comparison email failed</div>
+    <p style="font-size:14px;color:#333;line-height:1.6;margin:0 0 14px;">The comparison email for couple code <strong>${coupleCode}</strong> did not send.</p>
+    <table style="font-size:14px;color:#333;line-height:1.7;margin:0 0 14px;">
+      <tr><td style="padding-right:12px;color:#888;">Partner A</td><td>${partnerA.name || partnerA.email} (${partnerA.email})</td></tr>
+      <tr><td style="padding-right:12px;color:#888;">Partner B</td><td>${partnerB.name || partnerB.email} (${partnerB.email})</td></tr>
+    </table>
+    <div style="background:#f9f9f9;border-radius:6px;padding:14px;font-size:13px;color:#555;font-family:monospace;white-space:pre-wrap;margin:0 0 20px;">${errorText}</div>
+    <a href="${retryUrl}" style="display:inline-block;padding:12px 22px;background:#1a2744;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">Retry this couple's comparison email</a>
+    <p style="font-size:12px;color:#999;margin-top:16px;">Clicking retry re-runs the comparison and narration for this couple code and sends the email if it succeeds. If it fails again, you'll get another alert like this one.</p>
+  </div>
+</body>
+</html>`;
+}
+
+async function sendFailureAlert(coupleCode, partnerA, partnerB, errorText) {
+  await ses.send(new SendEmailCommand({
+    Source: FROM_EMAIL,
+    Destination: { ToAddresses: [CLINICIAN_EMAIL] },
+    Message: {
+      Subject: { Data: `SVQ comparison email failed — ${coupleCode}`, Charset: 'UTF-8' },
+      Body: { Html: { Data: buildFailureAlertEmail(coupleCode, partnerA, partnerB, errorText), Charset: 'UTF-8' } },
+    },
+  }));
+}
+
 async function handleCoupleCode(payload) {
   const coupleCode = payload.respondent?.coupleCode?.trim();
   if (!coupleCode) {
@@ -729,15 +788,13 @@ async function handleCoupleCode(payload) {
 
       let narration = null;
       if (comparison.hasAnyOverlap) {
-        narration = await getNarration(comparison);
+        const result = await getNarration(comparison);
+        narration = result.narration;
         if (narration) {
           console.log(`Couple code ${coupleCode} narration generated:`, JSON.stringify(narration));
         } else {
-          // Narration failed (API error, timeout, bad parse, etc). The
-          // comparison email cannot send without it. This is exactly the
-          // case the failure-alert + retry mechanism (Doc 1 item 38) is
-          // designed to catch — not built yet, so for now we log and stop.
-          console.error(`Couple code ${coupleCode} narration failed — comparison email not sent. Failure-alert/retry not yet built (Doc 1 item 38).`);
+          console.error(`Couple code ${coupleCode} narration failed:`, result.error);
+          await sendFailureAlert(coupleCode, partnerA, partnerB, result.error);
           return { coupleCode, status: "ready_for_comparison", comparison, narration: null, comparisonEmailStatus: "narration_failed" };
         }
       }
@@ -745,12 +802,15 @@ async function handleCoupleCode(payload) {
       let comparisonEmailStatus = "not_attempted";
       try {
         await sendComparisonEmails(partnerA, partnerB, comparison, narration);
+        await markComparisonSent(coupleCode, partnerA.email);
+        await markComparisonSent(coupleCode, partnerB.email);
         comparisonEmailStatus = "sent";
         console.log(`Couple code ${coupleCode} comparison emails sent to both partners.`);
         // Row deletion after a successful send is the next build step
         // (Doc 1 build queue item 3) — intentionally not implemented yet.
       } catch (emailErr) {
         console.error(`Couple code ${coupleCode} comparison email send failed:`, emailErr);
+        await sendFailureAlert(coupleCode, partnerA, partnerB, `Comparison email send failed: ${emailErr.message}`);
         comparisonEmailStatus = "send_failed";
       }
 
@@ -825,3 +885,15 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Email delivery failed', detail: err.message });
   }
 }
+
+// ── SHARED EXPORTS (added 2026-07-02) ────────────────────────────────────────
+// Reused by api/retry-comparison.js so the retry endpoint runs the exact same
+// logic as the original send, rather than a duplicated copy that could drift.
+export {
+  getExistingSubmissions,
+  computeComparison,
+  getNarration,
+  sendComparisonEmails,
+  sendFailureAlert,
+  markComparisonSent,
+};
