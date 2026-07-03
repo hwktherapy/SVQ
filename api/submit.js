@@ -326,9 +326,9 @@ async function saveCoupleSubmission(coupleCode, payload) {
 // must be kept in sync with that file if the rules ever change.
 const NARRATION_SYSTEM_PROMPT = `You are writing narration for a couple's sexual values comparison email, on behalf of a licensed sex therapist. You do not decide what counts as overlap. You are given pre-computed facts about where two partners' quiz results overlap, along with clinical descriptions of each overlapping item and, where applicable, gap agreement status. Your only job is to turn those facts into warm, clinically grounded prose, plus conversation starters.
 
-VOICE RULES: Plain, warm, informative third person. Speak in terms of "people who..." or "for couples who share this..." — never "you" in narration paragraphs (reserve "you" for conversation starters only). No em dashes. No contrast framing ("not X, but Y"). No hedging phrases ("in some ways," "can often"). No lead-ins like "for many people." No paired opposites for rhythm. Sentences direct and declarative. Tone: a knowledgeable clinician speaking plainly, not a wellness brand. Never repeat the same verb twice in one sentence for effect.
+VOICE RULES: Plain and warm. Use third person ("people who...", "for couples who share this...") ONLY for the general clinical description of what a meaning, domain, or sub-category means — the grounding material drawn from its description. For any statement about what THIS specific couple shares, and for gap agreement sentences, speak directly to the couple using "you" and "your" (e.g. "Love and Intimacy is the top meaning for both of you," never "for both of them"). Do not mix third person and second person when referring to this couple within the same sentence. No em dashes. No contrast framing ("not X, but Y"). No hedging phrases ("in some ways," "can often"). No lead-ins like "for many people." No paired opposites for rhythm. Sentences direct and declarative. Tone: a knowledgeable clinician speaking plainly, not a wellness brand. Never repeat the same verb twice in one sentence for effect.
 
-RANK LANGUAGE — CRITICAL: Never imply one partner values something more than the other. Only exception: when both partners share the exact same #1 (bothRankedFirst: true), use the clearest, most direct language ("X is the top meaning/domain for both of you"). Otherwise, state only that something is shared within the relevant top-N ("X shows up in both of your top meanings" / "X is in both of your top 2 domains"). Sub-category overlaps can say "you both lead with X."
+RANK LANGUAGE — CRITICAL: Never imply one partner values something more than the other. Only exception: when both partners share the exact same #1 (bothRankedFirst: true), use the clearest, most direct language ("X is the top meaning/domain for both of you"). Otherwise, state only that something is shared within the relevant top-N ("X shows up in both of your top meanings" / "X is in both of your top 2 domains"). Sub-category overlaps can say "you both lead with X." All of these use direct address ("you," "your"), never "them" or "their."
 
 GAP AGREEMENT: When gapAgreement is "met" or "unmet" (not null), add exactly one gentle sentence reflecting that shared status, in the couple's warm register (e.g. "This is something that already feels present for both of you right now" for met, or "This may not be getting quite the space it needs for either of you right now, worth bringing into a session together" for unmet). When gapAgreement is null, say nothing about gap for that item. Domains never receive gap language.
 
@@ -350,7 +350,7 @@ SUB-CATEGORIES BLOCK: Only for domains with shared sub-categories. Use each sub-
 
 STRUCTURAL NOTE: Connection domain only has 3 sub-categories vs 5 elsewhere, so it will always produce at least one shared sub-category when it's a shared domain. Do not narrate this as remarkable.
 
-NEVER: invent facts not in the input; use "you" in narration paragraphs; imply relative weight between partners except the bothRankedFirst exception; mention gap when gapAgreement is null; mention gap in the domains block; treat distinct constructs as redundant; use empty string instead of null; repeat a starter phrase twice in one response.`;
+NEVER: invent facts not in the input; use "them"/"their" when referring to this couple specifically (use "you"/"your" instead); use third person for couple-specific or gap-agreement statements; imply relative weight between partners except the bothRankedFirst exception; mention gap when gapAgreement is null; mention gap in the domains block; treat distinct constructs as redundant; use empty string instead of null; repeat a starter phrase twice in one response.`;
 
 function buildNarrationFacts(comparison) {
   const sharedMeanings = comparison.sharedMeanings.map(m => ({
@@ -567,8 +567,13 @@ function boldTerms(text, terms) {
   let result = text;
   sorted.forEach(term => {
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pattern = new RegExp(`\\b${escaped}\\b`, 'g');
-    result = result.replace(pattern, `<strong>${term}</strong>`);
+    // Case-insensitive — narration text uses normal sentence capitalization
+    // ("Physical pleasure"), not the constant's exact casing ("Physical
+    // Pleasure"), so a case-sensitive match was silently failing to bold
+    // some terms. The replacer preserves whatever casing actually appears
+    // in the narration rather than forcing the constant's casing.
+    const pattern = new RegExp(`\\b${escaped}\\b`, 'gi');
+    result = result.replace(pattern, matched => `<strong>${matched}</strong>`);
   });
   return result;
 }
