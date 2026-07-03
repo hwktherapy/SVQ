@@ -23,6 +23,11 @@ const ddb = DynamoDBDocumentClient.from(ddbClient);
 const COUPLE_TABLE = "svq-couple-submissions";
 const CLINICIAN_EMAIL = process.env.CLINICIAN_EMAIL;
 const FROM_EMAIL = process.env.FROM_EMAIL;
+// Forces every email to use strong TLS encryption in transit, or fail to
+// send rather than silently falling back to a weaker connection. Set up
+// 2026-07-02 in SES (console.aws.amazon.com Configuration sets). Applies to
+// all email sends below via ConfigurationSetName.
+const SES_CONFIGURATION_SET = "svq-require-tls";
 // NEW — required for AI narration. Must be added as a Vercel environment variable;
 // does not exist yet as of this file's creation. Get a key from console.anthropic.com.
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -683,6 +688,7 @@ async function sendComparisonEmails(partnerA, partnerB, comparison, narration) {
   // shared-facts data either way, just personalized by greeting name.
   await ses.send(new SendEmailCommand({
     Source: FROM_EMAIL,
+    ConfigurationSetName: SES_CONFIGURATION_SET,
     Destination: { ToAddresses: [partnerA.email], BccAddresses: [CLINICIAN_EMAIL] },
     Message: {
       Subject: { Data: heading, Charset: 'UTF-8' },
@@ -692,6 +698,7 @@ async function sendComparisonEmails(partnerA, partnerB, comparison, narration) {
 
   await ses.send(new SendEmailCommand({
     Source: FROM_EMAIL,
+    ConfigurationSetName: SES_CONFIGURATION_SET,
     Destination: { ToAddresses: [partnerB.email] },
     Message: {
       Subject: { Data: heading, Charset: 'UTF-8' },
@@ -760,6 +767,7 @@ function buildFailureAlertEmail(coupleCode, partnerA, partnerB, errorText) {
 async function sendFailureAlert(coupleCode, partnerA, partnerB, errorText) {
   await ses.send(new SendEmailCommand({
     Source: FROM_EMAIL,
+    ConfigurationSetName: SES_CONFIGURATION_SET,
     Destination: { ToAddresses: [CLINICIAN_EMAIL] },
     Message: {
       Subject: { Data: `SVQ comparison email failed — ${coupleCode}`, Charset: 'UTF-8' },
@@ -882,6 +890,7 @@ export default async function handler(req, res) {
     // Send client email — always sends, regardless of couple code
     await ses.send(new SendEmailCommand({
       Source: FROM_EMAIL,
+      ConfigurationSetName: SES_CONFIGURATION_SET,
       Destination: { ToAddresses: [respondent.email] },
       Message: {
         Subject: { Data: 'Your Sexual Values Quiz Results', Charset: 'UTF-8' },
@@ -892,6 +901,7 @@ export default async function handler(req, res) {
     // Send clinician email — always sends, regardless of couple code
     await ses.send(new SendEmailCommand({
       Source: FROM_EMAIL,
+      ConfigurationSetName: SES_CONFIGURATION_SET,
       Destination: { ToAddresses: [CLINICIAN_EMAIL] },
       Message: {
         Subject: { Data: `SVQ Results — ${respondent.name || respondent.email} — ${payload.submittedAt}`, Charset: 'UTF-8' },
