@@ -303,6 +303,34 @@ body {
 .required { color: #c0392b; }
 .field-divider { border: none; border-top: 1px solid #f0f0f0; margin: 1.25rem 0; }
 
+.link-box {
+  background: #f7f5f2;
+  border: 1.5px solid #e8e4de;
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  font-size: 14px;
+  color: #111111;
+  word-break: break-all;
+  margin-top: 0.5rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+.copy-btn {
+  margin-top: 0.6rem;
+  padding: 0.6rem 1.1rem;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.copy-btn:hover { background: #111b33; }
+.copy-btn.copied { background: #2a6b4a; }
+
 .statement {
   font-family: 'Libre Baskerville', serif;
   font-size: 21px;
@@ -822,10 +850,26 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
       </div>
       <hr class="field-divider" />
       <div class="field">
-        <label for="couple-code">Couple code <span class="optional">optional</span></label>
-        <div class="hint">If your clinician gave you a code, enter it here to link your results with your partner's.</div>
-        <input type="text" id="couple-code" placeholder="Enter code" />
-        <div class="hint" id="couple-code-status" style="display:none;margin-top:6px;"></div>
+        <label>Couple code <span class="optional">optional</span></label>
+        <div class="hint">Comparing results with a partner is optional. If you already have a code, enter it below. If not, we can create one for you to share.</div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="has-code-check" />
+          <span>I have a code</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="need-code-check" />
+          <span>I need a code for me and my partner</span>
+        </label>
+        <div id="has-code-box" style="display:none;margin-top:0.75rem;">
+          <input type="text" id="couple-code" placeholder="Enter code" />
+          <div class="hint" id="couple-code-status" style="display:none;margin-top:6px;"></div>
+        </div>
+        <div id="need-code-box" style="display:none;margin-top:0.75rem;">
+          <div class="hint">Send this link to your partner so your results can be compared once you've both finished.</div>
+          <div class="link-box" id="generated-link-display"></div>
+          <button type="button" class="copy-btn" id="copy-link-btn">Copy link</button>
+          <div class="hint" style="margin-top:0.6rem;">This link works for 30 days.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1486,6 +1530,89 @@ coupleCodeInput.addEventListener('input',function(){
   if(coupleCodeLocked){coupleCodeLocked=false;setCoupleCodeStatus('','');updateEmailNextBtn();}
 });
 
+const hasCodeCheck=document.getElementById('has-code-check');
+const needCodeCheck=document.getElementById('need-code-check');
+const hasCodeBox=document.getElementById('has-code-box');
+const needCodeBox=document.getElementById('need-code-box');
+const generatedLinkDisplay=document.getElementById('generated-link-display');
+const copyLinkBtn=document.getElementById('copy-link-btn');
+let generatedCode=null;
+
+function generateCoupleCode(){
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code='';
+  for(let i=0;i<6;i++) code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+function buildInviteLink(code){
+  return `${window.location.origin}${window.location.pathname}?code=${code}`;
+}
+
+hasCodeCheck.addEventListener('change',function(){
+  if(this.checked){
+    needCodeCheck.checked=false;
+    needCodeBox.style.display='none';
+    generatedCode=null;
+    hasCodeBox.style.display='block';
+  }else{
+    hasCodeBox.style.display='none';
+    coupleCodeInput.value='';
+    coupleCodeLocked=false;
+    setCoupleCodeStatus('','');
+  }
+  updateEmailNextBtn();
+});
+
+needCodeCheck.addEventListener('change',function(){
+  if(this.checked){
+    hasCodeCheck.checked=false;
+    hasCodeBox.style.display='none';
+    coupleCodeInput.value='';
+    coupleCodeLocked=false;
+    setCoupleCodeStatus('','');
+    generatedCode=generateCoupleCode();
+    generatedLinkDisplay.textContent=buildInviteLink(generatedCode);
+    needCodeBox.style.display='block';
+  }else{
+    needCodeBox.style.display='none';
+    generatedCode=null;
+  }
+  updateEmailNextBtn();
+});
+
+copyLinkBtn.addEventListener('click',function(){
+  const link=generatedLinkDisplay.textContent;
+  navigator.clipboard.writeText(link).then(()=>{
+    copyLinkBtn.textContent='Copied!';
+    copyLinkBtn.classList.add('copied');
+    setTimeout(()=>{copyLinkBtn.textContent='Copy link';copyLinkBtn.classList.remove('copied');},2000);
+  }).catch(()=>{});
+});
+
+function getCoupleCodeValue(){
+  if(hasCodeCheck.checked){
+    const v=coupleCodeInput.value.trim();
+    return v||null;
+  }
+  if(needCodeCheck.checked&&generatedCode){
+    return generatedCode;
+  }
+  return null;
+}
+
+function initCoupleCodeFromURL(){
+  const params=new URLSearchParams(window.location.search);
+  const codeParam=params.get('code');
+  if(codeParam){
+    hasCodeCheck.checked=true;
+    hasCodeBox.style.display='block';
+    coupleCodeInput.value=codeParam.trim().toUpperCase();
+    coupleCodeInput.dispatchEvent(new Event('blur'));
+  }
+}
+initCoupleCodeFromURL();
+
 document.getElementById('email-back').addEventListener('click',()=>showScreen('screen-intro'));
 document.getElementById('email-next').addEventListener('click',()=>{
   if(!isValidEmail(emailInput.value)||coupleCodeLocked) return;
@@ -1514,6 +1641,11 @@ function resetQuiz(){
   document.getElementById('couple-code').value='';
   coupleCodeLocked=false;
   setCoupleCodeStatus('','');
+  hasCodeCheck.checked=false;
+  needCodeCheck.checked=false;
+  hasCodeBox.style.display='none';
+  needCodeBox.style.display='none';
+  generatedCode=null;
   document.getElementById('anon-check').checked=false;
   consentCheck.checked=false;
   nameInput.disabled=false;
@@ -1535,7 +1667,7 @@ function submitResults(){
 
     const email=document.getElementById('email').value.trim();
     const nameVal=document.getElementById('name').value.trim();
-    const coupleCode=document.getElementById('couple-code').value.trim()||null;
+    const coupleCode=getCoupleCodeValue();
     const respondent={email,name:nameVal||'Anonymous',coupleCode};
 
     const exScore=scScores[SC.EX]?scScores[SC.EX].impScore:0;
