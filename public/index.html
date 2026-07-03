@@ -781,7 +781,7 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
 
     <div class="card intro-item">
       <h2>A note on privacy</h2>
-      <p>Your individual answers are private. What gets shared with your clinician are your results — the values that came up strongest and where there may be gaps between what you need and what you're experiencing. Nobody sees your response to any specific question.</p>
+      <p>Your individual answers are private. What gets shared with Hannah Wood-Kraft LMFT-Associate, CST are your results — the values that came up strongest and where there may be gaps between what you need and what you're experiencing. Nobody sees your response to any specific question.</p>
     </div>
   </div>
   <div class="btn-strip intro-item">
@@ -797,14 +797,23 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
     </div>
     <div class="card intro-item">
       <div class="field">
+        <label for="consent-check">Before you continue <span class="required">*</span></label>
+        <div class="hint">Your results, including your email address, are always sent to Hannah Wood-Kraft LMFT-Associate, CST, the therapist who created this quiz. This is true whether or not you choose to include your name. Your responses are not collected or used for research.</div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="consent-check" />
+          <span>I understand and agree</span>
+        </label>
+      </div>
+      <hr class="field-divider" />
+      <div class="field">
         <label for="email">Your email <span class="required">*</span></label>
-        <div class="hint">Your results will be sent here and shared with your clinician.</div>
+        <div class="hint">Your results will be sent here and shared with Hannah Wood-Kraft LMFT-Associate, CST.</div>
         <input type="email" id="email" placeholder="you@example.com" />
       </div>
       <hr class="field-divider" />
       <div class="field">
-        <label for="name">Your name <span class="optional">optional</span></label>
-        <div class="hint">Used only to personalize your results.</div>
+        <label for="name">Your name <span class="required">*</span></label>
+        <div class="hint">Used only to personalize your results. Enter your name, or check "Stay anonymous" below.</div>
         <input type="text" id="name" placeholder="First &amp; last name" />
         <label class="checkbox-row">
           <input type="checkbox" id="anon-check" />
@@ -1288,7 +1297,7 @@ function renderResults(){
         <li><span class="ol-num">3.</span><strong>Your top sub-categories</strong> — the specific needs within each domain where your values are sharpest and where there may be a gap between what matters to you and what is actually present in your life right now.</li>
       </ol>
       <p>These results are a starting point, not a final word. They are meant to give you something concrete to reflect on, to bring into a conversation with a partner, or to explore further with your therapist.</p>
-      <p>Your results will be emailed to you and to your clinician. If you entered a couple code, you and your partner will each receive a separate summary along with a note about where your values overlap once both of you have completed the quiz.</p>
+      <p>Your results will be emailed to you and to Hannah Wood-Kraft LMFT-Associate, CST. If you entered a couple code, you and your partner will each receive a separate summary along with a note about where your values overlap once both of you have completed the quiz.</p>
     </div>
 
     <span class="section-label">Your top sexual value</span>
@@ -1328,7 +1337,7 @@ function renderResults(){
       </div>`).join('')}
 
     <div class="results-footer">
-      <p class="results-footer-note">Your full results have been sent to your inbox. The clinician has also received a copy.</p>
+      <p class="results-footer-note">Your full results have been sent to your inbox. Hannah Wood-Kraft LMFT-Associate, CST has also received a copy.</p>
       <div class="results-footer-btns">
         <a href="https://hannah-wood-kraft.clientsecure.me/" target="_blank" class="btn-results btn-results-primary" style="text-decoration:none;display:block;">Book a session with a sex therapist to talk about your results</a>
         <button class="btn-results btn-results-secondary" onclick="resetQuiz()">Take the quiz again</button>
@@ -1408,19 +1417,26 @@ const nameInput=document.getElementById('name');
 anonCheck.addEventListener('change',function(){
   if(this.checked){nameInput.value='';nameInput.disabled=true;nameInput.placeholder='Anonymous';}
   else{nameInput.disabled=false;nameInput.placeholder='First & last name';}
+  updateEmailNextBtn();
 });
 
 const emailInput=document.getElementById('email');
 const emailNextBtn=document.getElementById('email-next');
+const consentCheck=document.getElementById('consent-check');
 emailNextBtn.disabled=true;
 
 function isValidEmail(val){
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 }
+function hasNameOrAnonymous(){
+  return anonCheck.checked||nameInput.value.trim().length>0;
+}
 function updateEmailNextBtn(){
-  emailNextBtn.disabled=!isValidEmail(emailInput.value)||coupleCodeLocked;
+  emailNextBtn.disabled=!isValidEmail(emailInput.value)||coupleCodeLocked||!consentCheck.checked||!hasNameOrAnonymous();
 }
 emailInput.addEventListener('input',updateEmailNextBtn);
+consentCheck.addEventListener('change',updateEmailNextBtn);
+nameInput.addEventListener('input',updateEmailNextBtn);
 
 const coupleCodeInput=document.getElementById('couple-code');
 const coupleCodeStatus=document.getElementById('couple-code-status');
@@ -1499,6 +1515,7 @@ function resetQuiz(){
   coupleCodeLocked=false;
   setCoupleCodeStatus('','');
   document.getElementById('anon-check').checked=false;
+  consentCheck.checked=false;
   nameInput.disabled=false;
   nameInput.placeholder='First & last name';
   emailNextBtn.disabled=true;
