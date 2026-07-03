@@ -1,6 +1,6 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { MEANING_FULL, DOMAIN_DESC, SUBCAT_DESC, DISTINCTION_PAIRS, SPONTANEITY_DELIBERATENESS_NOTE } from "./descriptions.js";
 
 const ses = new SESClient({
@@ -719,6 +719,18 @@ async function markComparisonSent(record) {
   }));
 }
 
+// Erases a couple's stored row after a successful comparison-email send —
+// minimum-necessary data retention (Doc 1, Data handling / HIPAA). Uses
+// DeleteItem, already granted to svq-ses-sender in the svq-couple-table-access
+// IAM policy (Doc 1 item 25), so no permission changes were needed.
+// coupleCode is the partition key, email is the sort key (Doc 1 item 26).
+async function deleteCoupleSubmission(record) {
+  await ddb.send(new DeleteCommand({
+    TableName: COUPLE_TABLE,
+    Key: { coupleCode: record.coupleCode, email: record.email },
+  }));
+}
+
 
 // ── FAILURE-ALERT EMAIL (added 2026-07-02, Doc 1 item 38) ───────────────────
 // Sent to Hannah only, when narration or the comparison email send fails.
@@ -811,8 +823,25 @@ async function handleCoupleCode(payload) {
         await markComparisonSent(partnerB);
         comparisonEmailStatus = "sent";
         console.log(`Couple code ${coupleCode} comparison emails sent to both partners.`);
-        // Row deletion after a successful send is the next build step
-        // (Doc 1 build queue item 3) — intentionally not implemented yet.
+
+        // Minimum-necessary data retention: erase both rows now that the
+        // comparison email has gone out. A failure here does not affect the
+        // couple — they already have their results — so it does not throw.
+        // It alerts Hannah via the existing failure-alert/retry system so
+        // deletion eventually happens rather than being silently forgotten.
+        try {
+          await deleteCoupleSubmission(partnerA);
+          await deleteCoupleSubmission(partnerB);
+          console.log(`Couple code ${coupleCode} rows deleted after successful send.`);
+        } catch (deleteErr) {
+          console.error(`Couple code ${coupleCode} row deletion failed:`, deleteErr);
+          await sendFailureAlert(
+            coupleCode,
+            partnerA,
+            partnerB,
+            `Comparison email sent successfully, but deleting the stored rows afterward failed: ${deleteErr.message}`
+          );
+        }
       } catch (emailErr) {
         console.error(`Couple code ${coupleCode} comparison email send failed:`, emailErr);
         await sendFailureAlert(coupleCode, partnerA, partnerB, `Comparison email send failed: ${emailErr.message}`);
@@ -901,4 +930,5 @@ export {
   sendComparisonEmails,
   sendFailureAlert,
   markComparisonSent,
+  deleteCoupleSubmission,
 };

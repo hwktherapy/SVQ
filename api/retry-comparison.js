@@ -5,6 +5,7 @@ import {
   sendComparisonEmails,
   sendFailureAlert,
   markComparisonSent,
+  deleteCoupleSubmission,
 } from "./submit.js";
 
 // Simple plain-text HTML response — this is a link clicked from an email,
@@ -46,11 +47,31 @@ export default async function handler(req, res) {
     const [partnerA, partnerB] = records;
 
     if (partnerA.comparisonSent || partnerB.comparisonSent) {
-      res.setHeader('Content-Type', 'text/html');
-      return res.status(200).send(page(
-        "Already sent",
-        `The comparison email for couple code <strong>${coupleCode}</strong> already went out successfully. Nothing to retry.`
-      ));
+      // The email already went out — the only reason this row still exists
+      // and this link is being clicked is that the post-send row deletion
+      // failed. Retry the deletion rather than dead-ending on "already sent".
+      try {
+        await deleteCoupleSubmission(partnerA);
+        await deleteCoupleSubmission(partnerB);
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(200).send(page(
+          "Cleanup completed",
+          `The comparison email for couple code <strong>${coupleCode}</strong> already went out. The stored rows have now been deleted.`
+        ));
+      } catch (deleteErr) {
+        console.error(`Retry cleanup failed for couple code ${coupleCode}:`, deleteErr);
+        await sendFailureAlert(
+          coupleCode,
+          partnerA,
+          partnerB,
+          `Retry attempt — row deletion failed again: ${deleteErr.message}`
+        );
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(200).send(page(
+          "Cleanup failed again",
+          `The comparison email for couple code <strong>${coupleCode}</strong> already went out, but deleting the stored rows failed again. Another failure alert has been sent with the error details.`
+        ));
+      }
     }
 
     const comparison = computeComparison(partnerA, partnerB);
