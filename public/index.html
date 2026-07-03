@@ -1326,6 +1326,8 @@ function renderResults(){
   const {rankedMeanings,rankedDomains,topSubcats}=computeResults();
   const top=rankedMeanings[0];
   const top2dom=rankedDomains.slice(0,2);
+  const resultsCoupleCode=getCoupleCodeValue();
+  const resultsShareLink=resultsCoupleCode?buildInviteLink(resultsCoupleCode):null;
 
   document.getElementById('results-content').innerHTML=`
     <div class="results-header">
@@ -1380,6 +1382,15 @@ function renderResults(){
           </div>`).join('')}
       </div>`).join('')}
 
+    ${resultsShareLink ? `
+    <span class="section-label">Comparing results with your partner</span>
+    <div class="orientation-card">
+      <p>If you haven't already, share this link with your partner so your results can be compared once you've both finished:</p>
+      <div class="link-box">${resultsShareLink}</div>
+      <button type="button" class="copy-btn" id="results-copy-link-btn">Copy link</button>
+    </div>
+    ` : ''}
+
     <div class="results-footer">
       <p class="results-footer-note">Your full results have been sent to your inbox. Hannah Wood-Kraft LMFT-Associate, CST has also received a copy.</p>
       <div class="results-footer-btns">
@@ -1389,6 +1400,17 @@ function renderResults(){
       <a href="https://hwktherapy.com" target="_blank" style="display:block;margin-top:1.25rem;font-size:14px;color:rgba(255,255,255,0.4);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">Learn more at hwktherapy.com</a>
     </div>
   `;
+
+  if(resultsShareLink){
+    const resultsCopyBtn=document.getElementById('results-copy-link-btn');
+    resultsCopyBtn.addEventListener('click',function(){
+      navigator.clipboard.writeText(resultsShareLink).then(()=>{
+        resultsCopyBtn.textContent='Copied!';
+        resultsCopyBtn.classList.add('copied');
+        setTimeout(()=>{resultsCopyBtn.textContent='Copy link';resultsCopyBtn.classList.remove('copied');},2000);
+      }).catch(()=>{});
+    });
+  }
 }
 
 let introObserver = null;
