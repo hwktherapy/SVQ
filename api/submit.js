@@ -57,6 +57,7 @@ function buildClientEmail(payload) {
   const name = respondent.name || "there";
   const top = rankedMeanings[0];
   const top2dom = rankedDomains;
+  const shareLink = respondent.coupleCode ? `${SITE_URL}/?code=${encodeURIComponent(respondent.coupleCode)}` : null;
 
   const meaningRows = rankedMeanings.map((m, i) => `
     <tr>
@@ -145,6 +146,17 @@ function buildClientEmail(payload) {
           <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Your top domains</div>
           ${domainSections}
         </td></tr>
+
+        ${shareLink ? `
+        <!-- Partner Share -->
+        <tr><td style="padding:24px 36px 0;">
+          <div style="background:#fff8ec;border-left:3px solid #d4aa70;border-radius:6px;padding:20px 24px;">
+            <p style="font-size:14px;color:#1a2744;font-weight:600;margin:0 0 10px;">Comparing results with your partner</p>
+            <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 12px;">If you haven't already, share this link with your partner so your results can be compared once you've both finished:</p>
+            <p style="font-size:14px;color:#1a2744;word-break:break-all;margin:0;">${shareLink}</p>
+          </div>
+        </td></tr>
+        ` : ''}
 
         <!-- Booking CTA -->
         <tr><td style="padding:24px 36px 0;">
