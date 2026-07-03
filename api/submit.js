@@ -34,6 +34,15 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 // Used to build the retry link in the failure-alert email. Falls back to the
 // known production domain if the env var isn't set — no new required var.
 const SITE_URL = process.env.SITE_URL || "https://svq-nine.vercel.app";
+// Couple-code rows expire 30 days after creation if unclaimed (partner invite
+// feature, added 2026-07-02). Applies to every couple row, not just
+// self-generated codes — a clinician-assigned code left unclaimed carries the
+// same minimum-necessary-retention concern. Backstop only: rows are still
+// deleted immediately and manually on a successful comparison send (see
+// deleteCoupleSubmission below); this only fires if that never happens.
+// Requires the DynamoDB table's TTL setting to be turned on with attribute
+// name "expiresAt" (console.aws.amazon.com, table > Additional settings).
+const COUPLE_CODE_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 // ── GAP TAG TEXT ──────────────────────────────────────────────────────────────
 function gapText(gapScore) {
@@ -302,6 +311,11 @@ async function saveCoupleSubmission(coupleCode, payload) {
       rankedMeanings,
       rankedDomains,
       topSubcats,
+      // TTL backstop (added 2026-07-02, partner invite feature) — DynamoDB
+      // deletes this row on its own ~30 days after creation if nothing else
+      // removes it first. Applies to every couple row, clinician-assigned or
+      // self-generated. Epoch seconds, per DynamoDB's TTL requirement.
+      expiresAt: Math.floor(Date.now() / 1000) + COUPLE_CODE_TTL_SECONDS,
     },
   }));
 }
@@ -719,6 +733,8 @@ async function sendComparisonEmails(partnerA, partnerB, comparison, narration) {
 // Query, DeleteItem (Doc 1 item 25) — not UpdateItem. Takes the full record
 // already in hand (from getExistingSubmissions) rather than just coupleCode
 // + email, since a full overwrite needs the whole item, not a partial key.
+// Note: because this re-Puts the full record, it also preserves whatever
+// expiresAt value was already on the row — the TTL clock is not reset here.
 async function markComparisonSent(record) {
   await ddb.send(new PutCommand({
     TableName: COUPLE_TABLE,
