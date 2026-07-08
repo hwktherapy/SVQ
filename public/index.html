@@ -759,6 +759,42 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
   animation: blurFocus 1.3s cubic-bezier(0.22,1,0.36,1) forwards;
 }
 
+.resume-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(17,27,51,0.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.resume-overlay.active { display: flex; }
+.resume-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.resume-card h2 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111111;
+  margin-bottom: 0.75rem;
+}
+.resume-card p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #444444;
+  margin-bottom: 1.5rem;
+}
+.resume-btns { display: flex; flex-direction: column; gap: 0.75rem; }
+.btn-neutral { background: #f0f0f0; border-color: #f0f0f0; color: #333333; }
+.btn-neutral:hover { background: #e4e4e4; border-color: #e4e4e4; }
+
 </style>
 </head>
 <body>
@@ -768,6 +804,17 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
   <div class="bg-orb orb-2"></div>
   <div class="bg-orb orb-3"></div>
   <div class="bg-orb orb-4"></div>
+</div>
+
+<div class="resume-overlay" id="resume-overlay">
+  <div class="resume-card">
+    <h2>Welcome back</h2>
+    <p>It looks like you started this quiz before and didn't finish. Your progress was saved on this device. Would you like to pick up where you left off, or start over?</p>
+    <div class="resume-btns">
+      <button class="btn btn-primary btn-full" id="resume-continue-btn">Resume where I left off</button>
+      <button class="btn btn-neutral btn-full" id="resume-restart-btn">Start over</button>
+    </div>
+  </div>
 </div>
 
 <div class="app">
@@ -810,6 +857,7 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
     <div class="card intro-item">
       <h2>A note on privacy</h2>
       <p>Your individual answers are private. What gets shared with Hannah Wood-Kraft LMFT-Associate, CST are your results — the values that came up strongest and where there may be gaps between what you need and what you're experiencing. Nobody sees your response to any specific question.</p>
+      <p>If you leave before finishing, your progress is saved on this device only. It is not sent anywhere or seen by anyone until you complete the quiz. If you're using a shared or public computer, choose "start over" instead of resuming next time, or clear your browser data when you're done.</p>
     </div>
   </div>
   <div class="btn-strip intro-item">
@@ -1041,7 +1089,10 @@ function shuffleNoAdjacent(arr,keyFn) {
   return shuffle(arr);
 }
 
-const QUESTIONS=[
+const ALL_QUESTIONS_BY_ID={};
+[...dualQuestions,...scenarioQuestions,...pairingQuestions].forEach(q=>{ALL_QUESTIONS_BY_ID[q.id]=q;});
+
+let QUESTIONS=[
   ...shuffleNoAdjacent(dualQuestions,q=>q.meaning||q.subcat),
   ...shuffleNoAdjacent(scenarioQuestions,q=>q.subcat),
   ...shuffle(pairingQuestions)
@@ -1049,6 +1100,55 @@ const QUESTIONS=[
 const TOTAL=QUESTIONS.length;
 let currentQ=0;
 const responses={};
+
+// ── SAME-DEVICE SAVE/RESUME (added 2026-07-08) ──────────────────────────────
+// Progress is stored in localStorage only — never sent to the server, never
+// leaves this device. Disclosed to the person on the intro screen. Saves the
+// actual shuffled question order (not just a position number), since order is
+// re-randomized on every fresh page load and a bare index would point to a
+// different question on resume.
+const PROGRESS_KEY='svq_progress_v1';
+
+function saveProgress(){
+  try{
+    const data={
+      orderIds:QUESTIONS.map(q=>q.id),
+      responses:responses,
+      currentQ:currentQ,
+      email:document.getElementById('email').value,
+      name:document.getElementById('name').value,
+      anon:document.getElementById('anon-check').checked,
+      hasCode:document.getElementById('has-code-check').checked,
+      needCode:document.getElementById('need-code-check').checked,
+      coupleCodeValue:document.getElementById('couple-code').value,
+      generatedCode:generatedCode,
+      savedAt:Date.now()
+    };
+    localStorage.setItem(PROGRESS_KEY,JSON.stringify(data));
+  }catch(e){
+    console.error('Could not save progress:',e);
+  }
+}
+
+function clearProgress(){
+  try{ localStorage.removeItem(PROGRESS_KEY); }catch(e){}
+}
+
+function loadProgress(){
+  try{
+    const raw=localStorage.getItem(PROGRESS_KEY);
+    if(!raw) return null;
+    const data=JSON.parse(raw);
+    if(!data.orderIds||!Array.isArray(data.orderIds)) return null;
+    const totalKnown=dualQuestions.length+scenarioQuestions.length+pairingQuestions.length;
+    if(data.orderIds.length!==totalKnown) return null;
+    const allValid=data.orderIds.every(id=>ALL_QUESTIONS_BY_ID[id]);
+    if(!allValid) return null;
+    return data;
+  }catch(e){
+    return null;
+  }
+}
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -1636,26 +1736,94 @@ function initCoupleCodeFromURL(){
 }
 initCoupleCodeFromURL();
 
+// ── RESUME OVERLAY ────────────────────────────────────────────────────────
+const resumeOverlay=document.getElementById('resume-overlay');
+const resumeContinueBtn=document.getElementById('resume-continue-btn');
+const resumeRestartBtn=document.getElementById('resume-restart-btn');
+
+function applyResume(data){
+  QUESTIONS=data.orderIds.map(id=>ALL_QUESTIONS_BY_ID[id]);
+  Object.keys(responses).forEach(k=>delete responses[k]);
+  Object.assign(responses,data.responses||{});
+  currentQ=Math.min(data.currentQ||0,QUESTIONS.length-1);
+
+  emailInput.value=data.email||'';
+  consentCheck.checked=true; // they already consented when they originally started
+
+  if(data.anon){
+    anonCheck.checked=true;
+    nameInput.value='';
+    nameInput.disabled=true;
+    nameInput.placeholder='Anonymous';
+  }else{
+    nameInput.value=data.name||'';
+  }
+
+  if(data.hasCode){
+    hasCodeCheck.checked=true;
+    hasCodeBox.style.display='block';
+    coupleCodeInput.value=data.coupleCodeValue||'';
+    // Re-check the code rather than trusting the old result — it may have
+    // been used by a partner in the time since this session was paused.
+    coupleCodeInput.dispatchEvent(new Event('blur'));
+  }else if(data.needCode&&data.generatedCode){
+    needCodeCheck.checked=true;
+    generatedCode=data.generatedCode;
+    generatedLinkDisplay.textContent=buildInviteLink(generatedCode);
+    needCodeBox.style.display='block';
+  }
+  updateEmailNextBtn();
+
+  resumeOverlay.classList.remove('active');
+  renderQuestion(currentQ,null);
+  showScreen('screen-question');
+}
+
+const existingProgress=loadProgress();
+if(existingProgress){
+  resumeOverlay.classList.add('active');
+}
+
+resumeContinueBtn.addEventListener('click',()=>{
+  const data=loadProgress();
+  if(data) applyResume(data);
+  else resumeOverlay.classList.remove('active');
+});
+
+resumeRestartBtn.addEventListener('click',()=>{
+  clearProgress();
+  resumeOverlay.classList.remove('active');
+});
+
 document.getElementById('email-back').addEventListener('click',()=>showScreen('screen-intro'));
 document.getElementById('email-next').addEventListener('click',()=>{
   if(!isValidEmail(emailInput.value)||coupleCodeLocked) return;
   currentQ=0;
   renderQuestion(0,'forward');
   showScreen('screen-question');
+  saveProgress();
 });
 
 document.getElementById('q-back').addEventListener('click',()=>{
   saveCurrentResponse();
   if(currentQ===0){showScreen('screen-email');}
   else{currentQ--;renderQuestion(currentQ,'back');window.scrollTo(0,0);}
+  saveProgress();
 });
 
 document.getElementById('q-next').addEventListener('click',()=>{
   saveCurrentResponse();
-  if(currentQ<TOTAL-1){currentQ++;renderQuestion(currentQ,'forward');window.scrollTo(0,0);}
-  else{renderResults();submitResults();showScreen('screen-results');animateResults();}
+  if(currentQ<TOTAL-1){
+    currentQ++;renderQuestion(currentQ,'forward');window.scrollTo(0,0);
+    saveProgress();
+  }
+  else{
+    renderResults();submitResults();showScreen('screen-results');animateResults();
+    clearProgress();
+  }
 });
 function resetQuiz(){
+  clearProgress();
   Object.keys(responses).forEach(k=>delete responses[k]);
   currentQ=0;
   cardInteracted={};
