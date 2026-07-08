@@ -810,7 +810,7 @@ async function sendFailureAlert(coupleCode, partnerA, partnerB, errorText) {
 }
 
 async function handleCoupleCode(payload) {
-  const coupleCode = payload.respondent?.coupleCode?.trim();
+  const coupleCode = payload.respondent?.coupleCode?.trim().toUpperCase();
   if (!coupleCode) {
     return { coupleCode: null, status: "no_code" };
   }
