@@ -848,16 +848,17 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
     </div>
 
     <div class="card intro-item">
-      <h2>How to use this quiz</h2>
+      <h2>How to take this quiz</h2>
       <p>There are no right answers here. What you're going to get is a starting point, not a verdict, not a diagnosis.</p>
       <p>Some questions might feel difficult to answer. Take your time and try to be as honest as you can. The quiz works best when you answer based on what's actually true for you, not what you think should be.</p>
+      <p>This quiz takes most people 15 to 30 minutes to complete. If you can't set aside that time right now, it's best to wait until you can. Your progress does save on this device if you need to step away, but starting fresh in one sitting tends to work better than spreading it across several.</p>
       <p>There are three types of questions. For most statements, you'll use two sliders. The first asks how much you agree with the statement, from strongly disagree to strongly agree. The second asks how present that same thing actually is in your current life, regardless of how much you agree with it. For example, if a statement reads "Sex is one of the main ways I unwind and decompress," the first slider is asking whether you agree that's true of you in general, and the second is asking how present that actually is in your sex life right now. Some questions ask you to rate how well a statement fits you. A small number ask you to choose between two options.</p>
     </div>
 
     <div class="card intro-item">
       <h2>A note on privacy</h2>
       <p>Your individual answers are private. What gets shared with Hannah Wood-Kraft LMFT-Associate, CST are your results — the values that came up strongest and where there may be gaps between what you need and what you're experiencing. Nobody sees your response to any specific question.</p>
-      <p>If you leave before finishing, your progress is saved on this device only. It is not sent anywhere or seen by anyone until you complete the quiz. If you're using a shared or public computer, choose "start over" instead of resuming next time, or clear your browser data when you're done.</p>
+      <p>If you leave before finishing, your progress is saved on this device only for up to 7 days. It is not sent anywhere or seen by anyone until you complete the quiz, and it clears automatically after 7 days if you don't return. If you're using a shared or public computer, choose "start over" instead of resuming next time, or clear your browser data when you're done.</p>
     </div>
   </div>
   <div class="btn-strip intro-item">
@@ -917,6 +918,7 @@ input[type="range"]:not(.unset)::-moz-range-thumb {
           <div class="link-box" id="generated-link-display"></div>
           <button type="button" class="copy-btn" id="copy-link-btn">Copy link</button>
           <div class="hint" style="margin-top:0.6rem;">This link works for 30 days.</div>
+          <div class="hint" style="margin-top:0.4rem;">If you start the quiz over, a new link is created. If you already sent the old one to your partner, send them this new one instead.</div>
         </div>
       </div>
     </div>
@@ -1144,6 +1146,11 @@ function loadProgress(){
     if(data.orderIds.length!==totalKnown) return null;
     const allValid=data.orderIds.every(id=>ALL_QUESTIONS_BY_ID[id]);
     if(!allValid) return null;
+    const SEVEN_DAYS_MS=7*24*60*60*1000;
+    if(!data.savedAt||(Date.now()-data.savedAt)>SEVEN_DAYS_MS){
+      clearProgress();
+      return null;
+    }
     return data;
   }catch(e){
     return null;
