@@ -1516,7 +1516,8 @@ function setCoupleCodeStatus(text,type){
 }
 
 coupleCodeInput.addEventListener('blur',async function(){
-  const code=this.value.trim();
+  const code=this.value.trim().toUpperCase();
+  this.value=code;
   if(!code){
     coupleCodeLocked=false;
     setCoupleCodeStatus('','');
@@ -1614,7 +1615,7 @@ copyLinkBtn.addEventListener('click',function(){
 
 function getCoupleCodeValue(){
   if(hasCodeCheck.checked){
-    const v=coupleCodeInput.value.trim();
+    const v=coupleCodeInput.value.trim().toUpperCase();
     return v||null;
   }
   if(needCodeCheck.checked&&generatedCode){
