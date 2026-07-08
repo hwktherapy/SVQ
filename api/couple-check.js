@@ -20,19 +20,16 @@ const COUPLE_TABLE = "svq-couple-submissions";
 //   available — no one has used this code yet
 //   joining   — one partner has already submitted; this person would be the second
 //   locked    — two submissions already exist; code is full
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   try {
     const { coupleCode } = req.body || {};
-    const code = coupleCode?.trim();
-
+    const code = coupleCode?.trim().toUpperCase();
     if (!code) {
       return res.status(400).json({ error: 'coupleCode required' });
     }
@@ -44,7 +41,6 @@ export default async function handler(req, res) {
     }));
 
     const count = (result.Items || []).length;
-
     let status;
     if (count === 0) status = "available";
     else if (count === 1) status = "joining";
